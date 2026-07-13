@@ -74,10 +74,15 @@ import com.example.data.database.CallMessageEntity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState                                                )
+        super.onCreate(savedInstanceState)
+        
+        val controller = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
+        controller.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
+        
         var initError: String? = null
         try { com.example.data.api.supabase.handleDeeplinks(intent) } catch (e: Throwable) { initError = e.stackTraceToString() }
-        enableEdgeToEdge(                                                )
+        enableEdgeToEdge()
         setContent {
             val viewModel: CallViewModel = viewModel(                                                )
             val darkTheme by viewModel.darkTheme.collectAsState(                                                )
@@ -278,19 +283,20 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
 
         Box(
             modifier = Modifier
-                .fillMaxSize(                                                )
-                .background(bgGradient                                                )
-                .padding(innerPadding                                                )
-                .statusBarsPadding(                                                )
+                .fillMaxSize()
+                .background(bgGradient)
+                .padding(bottom = innerPadding.calculateBottomPadding())
+                .imePadding()
         ) {
             Column(
-                modifier = Modifier.fillMaxSize(                                                )
+                modifier = Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
             ) {
                 // --- FLOATING TRANSPARENT TOP BAR ---
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth(                                                )
-                        .statusBarsPadding(                                                )
+                        .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically

@@ -271,7 +271,8 @@ fun LoginContent(
         modifier = Modifier
             .fillMaxSize()
             .background(LightBackground)
-            .padding(top = 48.dp),
+            .padding(top = 48.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         LumioLogo(isDark = false)
@@ -280,7 +281,7 @@ fun LoginContent(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(1f, fill = false)
                 .padding(horizontal = 24.dp, vertical = 24.dp)
                 .shadow(16.dp, RoundedCornerShape(32.dp), spotColor = Color.Black.copy(alpha = 0.1f)),
             shape = RoundedCornerShape(32.dp),
@@ -408,7 +409,8 @@ fun RegisterContent(
         modifier = Modifier
             .fillMaxSize()
             .background(LightBackground)
-            .padding(top = 48.dp),
+            .padding(top = 48.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -435,7 +437,7 @@ fun RegisterContent(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(1f, fill = false)
                 .padding(horizontal = 24.dp, vertical = 24.dp)
                 .shadow(16.dp, RoundedCornerShape(32.dp), spotColor = Color.Black.copy(alpha = 0.1f)),
             shape = RoundedCornerShape(32.dp),
@@ -548,7 +550,7 @@ fun LumioAuthScreen(viewModel: CallViewModel) {
     }
     var currentScreen by remember { mutableStateOf("landing") }
     
-    Crossfade(targetState = currentScreen, label = "auth_crossfade") { screen ->
+    Crossfade(targetState = currentScreen, label = "auth_crossfade", modifier = Modifier.imePadding()) { screen ->
         when (screen) {
             "landing" -> LandingScreen(onGetStarted = { currentScreen = "login" })
             "login" -> LoginContent(
