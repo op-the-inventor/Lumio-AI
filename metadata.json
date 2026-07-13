@@ -1,0 +1,6 @@
+{
+  "name": "Lumio",
+  "description": "Lumio is an uncensored voice call assistant that mirrors your emotion and speaks back using offline TTS. Powered by OpenRouter.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

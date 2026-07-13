@@ -1,0 +1,19 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#8B5CF6"
+        android:pathData="M 54,20 C 65,20 74,29 74,40 C 74,44 72,48 70,51 C 80,51 86,55 86,60 C 86,75 70,85 54,85 C 38,85 22,75 22,60 C 22,55 28,51 38,51 C 36,48 34,44 34,40 C 34,29 43,20 54,20 Z" />
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M 46,35 C 48,35 50,37 50,39 C 50,41 48,43 46,43 C 44,43 42,41 42,39 C 42,37 44,35 46,35 Z" />
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M 62,35 C 64,35 66,37 66,39 C 66,41 64,43 62,43 C 60,43 58,41 58,39 C 58,37 60,35 62,35 Z" />
+    <!-- Beak -->
+    <path
+        android:fillColor="#FFA500"
+        android:pathData="M 45,46 L 63,46 L 54,54 Z" />
+</vector>

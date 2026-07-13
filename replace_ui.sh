@@ -1,0 +1,2 @@
+#!/bin/bash
+sed -i 's/import androidx.compose.foundation.clickable/import androidx.compose.foundation.clickable\nimport androidx.compose.foundation.interaction.MutableInteractionSource\nimport androidx.compose.foundation.interaction.collectIsPressedAsState\nimport androidx.compose.ui.draw.shadow\nimport androidx.compose.foundation.verticalScroll\nimport androidx.compose.foundation.rememberScrollState/' app/src/main/java/com/example/ui/AuthScreens.kt
