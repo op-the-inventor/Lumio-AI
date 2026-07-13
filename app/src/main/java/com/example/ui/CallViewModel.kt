@@ -860,11 +860,11 @@ Do not forget the tone tag!
                 try {
                     val credentialManager = androidx.credentials.CredentialManager.create(context)
                     // Retrieve web client id from BuildConfig or use placeholder
-                    val webClientId = "591711101477-bg6phulq4d0gp3jpkod92cqe6unpg0r6.apps.googleusercontent.com"
+                    val androidClientId = "591711101477-bg6phulq4d0gp3jpkod92cqe6unpg0r6.apps.googleusercontent.com"
                     
                     val googleIdOption = com.google.android.libraries.identity.googleid.GetGoogleIdOption.Builder()
                         .setFilterByAuthorizedAccounts(false)
-                        .setServerClientId(webClientId)
+                        .setServerClientId(androidClientId)
                         .build()
 
                     val request = androidx.credentials.GetCredentialRequest.Builder()
