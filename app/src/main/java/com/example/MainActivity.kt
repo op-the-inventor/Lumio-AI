@@ -3,7 +3,7 @@ package com.example
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
-import io.github.jan.supabase.gotrue.handleDeeplinks
+import io.github.jan.supabase.auth.handleDeeplinks
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -74,14 +74,14 @@ import com.example.data.database.CallMessageEntity
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+        super.onCreate(savedInstanceState                                                )
         var initError: String? = null
         try { com.example.data.api.supabase.handleDeeplinks(intent) } catch (e: Throwable) { initError = e.stackTraceToString() }
-        enableEdgeToEdge()
+        enableEdgeToEdge(                                                )
         setContent {
-            val viewModel: CallViewModel = viewModel()
-            val darkTheme by viewModel.darkTheme.collectAsState()
-            val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+            val viewModel: CallViewModel = viewModel(                                                )
+            val darkTheme by viewModel.darkTheme.collectAsState(                                                )
+            val isLoggedIn by viewModel.isLoggedIn.collectAsState(                                                )
 
             MyApplicationTheme(darkTheme = darkTheme, dynamicColor = false) {
                 Surface(
@@ -89,11 +89,11 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     if (initError != null) {
-                        Text(initError!!, color = Color.Red, modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()))
+                        Text(initError!!, color = Color.Red, modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())                                                )
                     } else if (isLoggedIn) {
-                        CallScreen(viewModel = viewModel)
+                        CallScreen(viewModel = viewModel                                                )
                     } else {
-                        com.example.ui.LumioAuthScreen(viewModel = viewModel)
+                        com.example.ui.LumioAuthScreen(viewModel = viewModel                                                )
                     }
                 }
             }
@@ -103,21 +103,21 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MinimalistMenuIcon(modifier: Modifier = Modifier, color: Color = Color.Black) {
     Canvas(modifier = modifier.size(18.dp)) {
-        val strokeWidth = 2.dp.toPx()
+        val strokeWidth = 2.dp.toPx(                                                )
         drawLine(
             color = color,
             start = Offset(0f, size.height * 0.35f),
             end = Offset(size.width, size.height * 0.35f),
             strokeWidth = strokeWidth,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
+                                                        )
         drawLine(
             color = color,
             start = Offset(0f, size.height * 0.65f),
             end = Offset(size.width, size.height * 0.65f),
             strokeWidth = strokeWidth,
             cap = androidx.compose.ui.graphics.StrokeCap.Round
-        )
+                                                        )
     }
 }
 
@@ -128,14 +128,14 @@ fun WaveformIcon(modifier: Modifier = Modifier, color: Color = Color.White) {
         horizontalArrangement = Arrangement.spacedBy(2.5.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val heights = listOf(0.4f, 0.9f, 0.6f, 0.8f, 0.3f)
+        val heights = listOf(0.4f, 0.9f, 0.6f, 0.8f, 0.3f                                                )
         heights.forEach { h ->
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(h)
-                    .background(color, RoundedCornerShape(1.dp))
-            )
+                    .weight(1f                                                )
+                    .fillMaxHeight(h                                                )
+                    .background(color, RoundedCornerShape(1.dp)                                                )
+                                                            )
         }
     }
 }
@@ -145,32 +145,32 @@ enum class ScreenTab {
     CHAT
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class                                                )
 @Composable
 fun CallScreen(viewModel: CallViewModel = viewModel()) {
     val context = LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     // Gather states
-    val darkTheme by viewModel.darkTheme.collectAsState()
-    val apiKey by viewModel.apiKey.collectAsState()
-    val selectedModel by viewModel.selectedModel.collectAsState()
-    val callState by viewModel.callState.collectAsState()
-    val isMuted by viewModel.isMuted.collectAsState()
-    val isSpeakerOn by viewModel.isSpeakerOn.collectAsState()
-    val currentAIEmotion by viewModel.currentAIEmotion.collectAsState()
-    val isTTSPlaying by viewModel.isTTSPlaying.collectAsState()
-    val isListening by viewModel.isListening.collectAsState()
-    val speechTranscript by viewModel.speechTranscript.collectAsState()
-    val error by viewModel.error.collectAsState()
-    val messages by viewModel.messages.collectAsState()
-    val sessions by viewModel.sessions.collectAsState()
-    val isGenerating by viewModel.isGenerating.collectAsState()
+    val darkTheme by viewModel.darkTheme.collectAsState(                                                )
+    val apiKey by viewModel.apiKey.collectAsState(                                                )
+    val selectedModel by viewModel.selectedModel.collectAsState(                                                )
+    val callState by viewModel.callState.collectAsState(                                                )
+    val isMuted by viewModel.isMuted.collectAsState(                                                )
+    val isSpeakerOn by viewModel.isSpeakerOn.collectAsState(                                                )
+    val currentAIEmotion by viewModel.currentAIEmotion.collectAsState(                                                )
+    val isTTSPlaying by viewModel.isTTSPlaying.collectAsState(                                                )
+    val isListening by viewModel.isListening.collectAsState(                                                )
+    val speechTranscript by viewModel.speechTranscript.collectAsState(                                                )
+    val error by viewModel.error.collectAsState(                                                )
+    val messages by viewModel.messages.collectAsState(                                                )
+    val sessions by viewModel.sessions.collectAsState(                                                )
+    val isGenerating by viewModel.isGenerating.collectAsState(                                                )
 
-    val selectedLanguage by viewModel.selectedLanguage.collectAsState()
-    val selectedEmotionalPresetId by viewModel.selectedEmotionalPresetId.collectAsState()
-    val selectedPersonaGender by viewModel.selectedPersonaGender.collectAsState()
-    val voiceEmotionSettings by viewModel.voiceEmotionSettings.collectAsState()
+    val selectedLanguage by viewModel.selectedLanguage.collectAsState(                                                )
+    val selectedEmotionalPresetId by viewModel.selectedEmotionalPresetId.collectAsState(                                                )
+    val selectedPersonaGender by viewModel.selectedPersonaGender.collectAsState(                                                )
+    val voiceEmotionSettings by viewModel.voiceEmotionSettings.collectAsState(                                                )
 
     // Screen navigation overlays
     var showSettings by remember { mutableStateOf(false) }
@@ -195,102 +195,102 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     var selectedFileType by remember { mutableStateOf<String?>(null) }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(                                                )
     ) { uri: android.net.Uri? ->
         if (uri != null) {
             selectedFileUri = uri
             var name: String? = null
             if (uri.scheme == "content") {
-                val cursor = context.contentResolver.query(uri, null, null, null, null)
+                val cursor = context.contentResolver.query(uri, null, null, null, null                                                )
                 try {
                     if (cursor != null && cursor.moveToFirst()) {
-                        val colIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        val colIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME                                                )
                         if (colIndex != -1) {
-                            name = cursor.getString(colIndex)
+                            name = cursor.getString(colIndex                                                )
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    e.printStackTrace(                                                )
                 } finally {
-                    cursor?.close()
+                    cursor?.close(                                                )
                 }
             }
             if (name == null) {
                 name = uri.path
                 val cut = name?.lastIndexOf('/') ?: -1
                 if (cut != -1) {
-                    name = name?.substring(cut + 1)
+                    name = name?.substring(cut + 1                                                )
                 }
             }
             selectedFileName = name ?: "file"
             selectedFileType = context.contentResolver.getType(uri) ?: "application/octet-stream"
-            Toast.makeText(context, "Attached: $selectedFileName", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Attached: $selectedFileName", Toast.LENGTH_SHORT).show(                                                )
         }
     }
 
     // Floating scroll controller for transcript
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState(                                                )
     LaunchedEffect(messages.size, isGenerating) {
         if (messages.isNotEmpty() || isGenerating) {
             val lastIndex = if (isGenerating) messages.size else messages.size - 1
             if (lastIndex >= 0) {
-                listState.animateScrollToItem(lastIndex)
+                listState.animateScrollToItem(lastIndex                                                )
             }
         }
     }
 
     // Audio Permission Launcher
     val audioPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
+        contract = ActivityResultContracts.RequestPermission(                                                )
     ) { isGranted ->
         if (isGranted) {
             if (callState == CallState.ACTIVE) {
-                viewModel.startListening()
+                viewModel.startListening(                                                )
             } else {
-                viewModel.startCall()
+                viewModel.startCall(                                                )
             }
         } else {
-            Toast.makeText(context, "Microphone permission is required for voice calls.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Microphone permission is required for voice calls.", Toast.LENGTH_LONG).show(                                                )
         }
     }
 
     Scaffold(
         containerColor = Color.Transparent
     ) { innerPadding ->
-        // Main layout container (Safe areas respected using statusBarsPadding / navigationBarsPadding)
+        // Main layout container (Safe areas respected using statusBarsPadding / navigationBarsPadding                                                )
         val bgGradient = if (darkTheme) {
             Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFF0C0C0D),
                     Color(0xFF141416),
-                    Color(0xFF0C0C0D)
-                )
-            )
+                    Color(0xFF0C0C0D                                                )
+                                                                )
+                                                            )
         } else {
             Brush.verticalGradient(
                 colors = listOf(
                     Color(0xFFF8F9FB),
                     Color(0xFFEFF1F4),
-                    Color(0xFFF8F9FB)
-                )
-            )
+                    Color(0xFFF8F9FB                                                )
+                                                                )
+                                                            )
         }
 
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(bgGradient)
-                .padding(innerPadding)
-                .statusBarsPadding()
+                .fillMaxSize(                                                )
+                .background(bgGradient                                                )
+                .padding(innerPadding                                                )
+                .statusBarsPadding(                                                )
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(                                                )
             ) {
                 // --- FLOATING TRANSPARENT TOP BAR ---
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
+                        .fillMaxWidth(                                                )
+                        .statusBarsPadding(                                                )
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -299,20 +299,20 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                     IconButton(
                         onClick = { isSidebarOpen = true },
                         modifier = Modifier
-                            .size(44.dp)
-                            .testTag("menu_sidebar_button")
+                            .size(44.dp                                                )
+                            .testTag("menu_sidebar_button"                                                )
                     ) {
-                        MinimalistMenuIcon(color = MaterialTheme.colorScheme.onSurface)
+                        MinimalistMenuIcon(color = MaterialTheme.colorScheme.onSurface                                                )
                     }
 
-                    // Center App Title (Clean brand header)
+                    // Center App Title (Clean brand header                                                )
                     Text(
                         text = "Lumio",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Black,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.testTag("app_title")
-                    )
+                        modifier = Modifier.testTag("app_title"                                                )
+                                                                    )
 
                     // Top Right Action Icons: Call AI and Temp Chat Buttons
                     Row(
@@ -323,43 +323,43 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         IconButton(
                             onClick = {
                                 if (callState == CallState.ACTIVE) {
-                                    viewModel.endCall()
-                                    Toast.makeText(context, "Call ended", Toast.LENGTH_SHORT).show()
+                                    viewModel.endCall(                                                )
+                                    Toast.makeText(context, "Call ended", Toast.LENGTH_SHORT).show(                                                )
                                 } else {
                                     val hasAudioPermission = ContextCompat.checkSelfPermission(
                                         context, Manifest.permission.RECORD_AUDIO
                                     ) == PackageManager.PERMISSION_GRANTED
                                     if (hasAudioPermission) {
-                                        viewModel.startCall()
+                                        viewModel.startCall(                                                )
                                     } else {
-                                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO                                                )
                                     }
                                 }
                             },
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                .size(44.dp                                                )
+                                .clip(CircleShape                                                )
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)                                                )
                                 .border(
                                     width = 1.dp,
                                     color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
                                     shape = CircleShape
-                                )
-                                .testTag("top_right_call_button")
+                                                                                )
+                                .testTag("top_right_call_button"                                                )
                         ) {
                             Icon(
                                 imageVector = if (callState == CallState.ACTIVE) Icons.Rounded.PhoneInTalk else Icons.Rounded.Phone,
                                 contentDescription = "Call AI",
                                 tint = if (callState == CallState.ACTIVE) NeonGreen else MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
+                                modifier = Modifier.size(20.dp                                                )
+                                                                            )
                         }
 
                         // Temp Chat Button
                         Button(
                             onClick = {
-                                viewModel.clearHistory()
-                                Toast.makeText(context, "Temporary chat started (History cleared)", Toast.LENGTH_SHORT).show()
+                                viewModel.clearHistory(                                                )
+                                Toast.makeText(context, "Temporary chat started (History cleared)", Toast.LENGTH_SHORT).show(                                                )
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
@@ -369,24 +369,24 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier
-                                .height(38.dp)
-                                .testTag("temp_chat_button")
+                                .height(38.dp                                                )
+                                .testTag("temp_chat_button"                                                )
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.AutoAwesome,
                                     contentDescription = "Temp Chat",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                                    modifier = Modifier.size(14.dp                                                )
+                                                                                )
                                 Text(
                                     text = "Temp Chat",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
-                                )
+                                                                                )
                             }
                         }
                     }
@@ -395,28 +395,28 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 // --- MAIN CONTENT BODY ---
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
+                        .weight(1f                                                )
+                        .fillMaxWidth(                                                )
                 ) {
                         // --- CHAT PANEL ---
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .fillMaxSize(                                                )
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             // --- MESSAGE STREAM (SCROLLABLE LIST) ---
                             Box(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
+                                    .weight(1f                                                )
+                                    .fillMaxWidth(                                                )
+                                    .padding(vertical = 4.dp                                                )
                             ) {
                                 if (messages.isEmpty() && !isGenerating) {
                                     // Elegant empty state
                                     Column(
                                         modifier = Modifier
-                                            .fillMaxSize()
+                                            .fillMaxSize(                                                )
                                             .padding(16.dp),
                                         verticalArrangement = Arrangement.Center,
                                         horizontalAlignment = Alignment.CenterHorizontally
@@ -425,47 +425,55 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             imageVector = Icons.Rounded.Forum,
                                             contentDescription = "Empty chat",
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                            modifier = Modifier.size(64.dp)
-                                        )
-                                        Spacer(modifier = Modifier.height(12.dp))
+                                            modifier = Modifier.size(64.dp                                                )
+                                                                                        )
+                                        Spacer(modifier = Modifier.height(12.dp)                                                )
                                         Text(
                                             text = "No messages yet",
                                             fontSize = 16.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
+                                                                                        )
+                                        Spacer(modifier = Modifier.height(4.dp)                                                )
                                         Text(
                                             text = "Type an uncensored prompt below or start a voice call to begin chatting with Lumio!",
                                             fontSize = 12.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             textAlign = TextAlign.Center,
-                                            modifier = Modifier.padding(horizontal = 24.dp)
-                                        )
+                                            modifier = Modifier.padding(horizontal = 24.dp                                                )
+                                                                                        )
                                     }
                                 } else {
                                     LazyColumn(
                                         state = listState,
                                         modifier = Modifier.fillMaxSize(),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        verticalArrangement = Arrangement.spacedBy(8.dp                                                )
                                     ) {
-                                        items(messages) { msg ->
+                                        items(messages, key = { it.id }) { msg ->
+                                            var isVisible by remember { mutableStateOf(false) }
+                                            LaunchedEffect(msg.id) { isVisible = true }
+                                            androidx.compose.animation.AnimatedVisibility(
+                                                visible = isVisible,
+                                                enter = androidx.compose.animation.fadeIn(animationSpec = androidx.compose.animation.core.tween(350)) +
+                                                        androidx.compose.animation.slideInVertically(initialOffsetY = { 20 }, animationSpec = androidx.compose.animation.core.tween(350)),
+                                                modifier = Modifier.fillMaxWidth(                                                )
+                                            ) {
                                             val isUser = msg.sender == "user"
-                                            val hasAttachment = msg.text.contains("[Attached File:")
+                                            val hasAttachment = msg.text.contains("[Attached File:"                                                )
                                             val cleanText = if (hasAttachment) {
-                                                msg.text.substringBefore("[Attached File:").trim()
+                                                msg.text.substringBefore("[Attached File:").trim(                                                )
                                             } else {
                                                 msg.text
                                             }
                                             val attachmentInfo = if (hasAttachment) {
-                                                msg.text.substringAfter("[Attached File:").substringBefore("]").trim()
+                                                msg.text.substringAfter("[Attached File:").substringBefore("]").trim(                                                )
                                             } else {
                                                 null
                                             }
 
                                             Row(
                                                 modifier = Modifier
-                                                    .fillMaxWidth()
+                                                    .fillMaxWidth(                                                )
                                                     .padding(vertical = 2.dp),
                                                 horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
                                             ) {
@@ -477,70 +485,71 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                 topEnd = 16.dp,
                                                                 bottomStart = if (isUser) 16.dp else 0.dp,
                                                                 bottomEnd = if (isUser) 0.dp else 16.dp
-                                                            )
-                                                        )
-                                                        .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
-                                                        .padding(12.dp)
-                                                        .widthIn(max = 280.dp)
+                                                                                                            )
+                                                                                                        )
+                                                        .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
+                                                        .padding(12.dp                                                )
+                                                        .widthIn(max = 280.dp                                                )
                                                 ) {
                                                     Column {
                                                         Row(
                                                             verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                            horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
                                                         ) {
                                                             Text(
                                                                 text = if (isUser) "You" else "Lumio",
                                                                 fontSize = 10.sp,
                                                                 fontWeight = FontWeight.Bold,
                                                                 color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
-                                                            )
+                                                                                                            )
                                                             if (!isUser) {
                                                                 Box(
                                                                     modifier = Modifier
-                                                                        .clip(RoundedCornerShape(4.dp))
-                                                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                                                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                                                                        .clip(RoundedCornerShape(4.dp)                                                )
+                                                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)                                                )
+                                                                        .padding(horizontal = 4.dp, vertical = 1.dp                                                )
                                                                 ) {
                                                                     Text(
                                                                         text = msg.emotionTag,
                                                                         color = MaterialTheme.colorScheme.primary,
                                                                         fontSize = 8.sp,
                                                                         fontWeight = FontWeight.Bold
-                                                                    )
+                                                                                                                    )
+
                                                                 }
                                                             }
                                                         }
-                                                        Spacer(modifier = Modifier.height(4.dp))
+                                                        Spacer(modifier = Modifier.height(4.dp)                                                )
                                                         if (cleanText.isNotEmpty()) {
                                                             Text(
                                                                 text = cleanText,
                                                                 fontSize = 14.sp,
                                                                 color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                                                 lineHeight = 18.sp
-                                                            )
+                                                                                                            )
                                                         }
                                                         if (attachmentInfo != null) {
-                                                            val parts = attachmentInfo.split(" (")
+                                                            val parts = attachmentInfo.split(" ("                                                )
                                                             val fileName = parts.firstOrNull() ?: "Attachment"
                                                             val fileType = parts.getOrNull(1)?.removeSuffix(")") ?: ""
-                                                            val isImage = fileType.startsWith("image/")
+                                                            val isImage = fileType.startsWith("image/"                                                )
 
-                                                            Spacer(modifier = Modifier.height(6.dp))
+                                                            Spacer(modifier = Modifier.height(6.dp)                                                )
                                                             Row(
                                                                 modifier = Modifier
-                                                                    .fillMaxWidth()
-                                                                    .clip(RoundedCornerShape(8.dp))
-                                                                    .background(if (isUser) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f))
+                                                                    .fillMaxWidth(                                                )
+                                                                    .clip(RoundedCornerShape(8.dp)                                                )
+                                                                    .background(if (isUser) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)                                                )
                                                                     .padding(8.dp),
                                                                 verticalAlignment = Alignment.CenterVertically,
-                                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                                horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
                                                             ) {
                                                                 Icon(
                                                                     imageVector = if (isImage) Icons.Rounded.Image else Icons.Rounded.AttachFile,
                                                                     contentDescription = null,
                                                                     tint = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
-                                                                    modifier = Modifier.size(20.dp)
-                                                                )
+                                                                    modifier = Modifier.size(20.dp                                                )
+                                                                                                                )
                                                                 Column(modifier = Modifier.weight(1f)) {
                                                                     Text(
                                                                         text = fileName,
@@ -549,12 +558,12 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                         color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
                                                                         maxLines = 1,
                                                                         overflow = TextOverflow.Ellipsis
-                                                                    )
+                                                                                                                    )
                                                                     Text(
                                                                         text = fileType.uppercase(),
                                                                         fontSize = 9.sp,
-                                                                        color = (if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = 0.7f)
-                                                                    )
+                                                                        color = (if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = 0.7f                                                )
+                                                                                                                    )
                                                                 }
                                                             }
                                                         }
@@ -562,33 +571,32 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 }
                                             }
                                         }
-
+                                        }
                                         // Generating/thinking loader item
                                         if (isGenerating) {
                                             item {
-                                                ThinkingIndicatorItem()
+                                                ThinkingIndicatorItem(                                                )
                                             }
                                         }
                                     }
                                 }
                             }
-
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(8.dp)                                                )
 
                             // --- BOTTOM INPUT AREA ---
                             Column(
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(                                                )
                                     .padding(vertical = 4.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                                verticalArrangement = Arrangement.spacedBy(4.dp                                                )
                             ) {
                                 // --- ATTACHED FILE PREVIEW CHIP ---
                                 if (selectedFileName != null) {
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(16.dp))
-                                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+                                            .fillMaxWidth(                                                )
+                                            .clip(RoundedCornerShape(16.dp)                                                )
+                                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)                                                )
                                             .padding(horizontal = 12.dp, vertical = 6.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
@@ -596,14 +604,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                            modifier = Modifier.weight(1f)
+                                            modifier = Modifier.weight(1f                                                )
                                         ) {
                                             Icon(
                                                 imageVector = if (selectedFileType?.startsWith("image/") == true) Icons.Rounded.Image else Icons.Rounded.AttachFile,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(20.dp)
-                                            )
+                                                modifier = Modifier.size(20.dp                                                )
+                                                                                            )
                                             Column {
                                                 Text(
                                                     text = selectedFileName ?: "",
@@ -613,11 +621,12 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     maxLines = 1,
                                                     overflow = TextOverflow.Ellipsis
                                                 )
+
                                                 Text(
                                                     text = (selectedFileType ?: "").uppercase(),
                                                     fontSize = 9.sp,
-                                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                                                )
+                                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f                                                )
+                                                                                                )
                                             }
                                         }
                                         IconButton(
@@ -626,14 +635,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 selectedFileName = null
                                                 selectedFileType = null
                                             },
-                                            modifier = Modifier.size(24.dp)
+                                            modifier = Modifier.size(24.dp                                                )
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Rounded.Close,
                                                 contentDescription = "Remove attachment",
                                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                modifier = Modifier.size(16.dp)
-                                            )
+                                                modifier = Modifier.size(16.dp                                                )
+                                                                                            )
                                         }
                                     }
                                 }
@@ -645,46 +654,46 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                 Box(modifier = Modifier.padding(start = 12.dp, bottom = 2.dp)) {
                                     Row(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
+                                            .clip(RoundedCornerShape(8.dp)                                                )
                                             .clickable { showModelDropdownInInput = true }
                                             .padding(horizontal = 6.dp, vertical = 4.dp),
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
                                     ) {
                                         val currentModelName = when (selectedModel) {
                                             "meta-llama/llama-3.3-70b-instruct:free" -> "Llama 3.3"
                                             "google/gemini-2.5-flash" -> "Gemini 2.5"
                                             "mistralai/mistral-7b-instruct:free" -> "Mistral 7B"
                                             "deepseek/deepseek-chat:free" -> "DeepSeek"
-                                            else -> selectedModel.substringAfter("/").substringBefore(":")
+                                            else -> selectedModel.substringAfter("/").substringBefore(":"                                                )
                                         }
                                         Text(
                                             text = currentModelName,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                                                                        )
                                         Icon(
                                             imageVector = Icons.Rounded.ArrowDropDown,
                                             contentDescription = "Select Model",
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                            modifier = Modifier.size(16.dp                                                )
+                                                                                        )
                                     }
 
                                     DropdownMenu(
                                         expanded = showModelDropdownInInput,
                                         onDismissRequest = { showModelDropdownInInput = false },
                                         modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.surface)
-                                            .border(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA), RoundedCornerShape(8.dp))
+                                            .background(MaterialTheme.colorScheme.surface                                                )
+                                            .border(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA), RoundedCornerShape(8.dp)                                                )
                                     ) {
                                         val modelsList = listOf(
                                             "meta-llama/llama-3.3-70b-instruct:free" to "Llama 3.3",
                                             "google/gemini-2.5-flash" to "Gemini 2.5",
                                             "mistralai/mistral-7b-instruct:free" to "Mistral 7B",
                                             "deepseek/deepseek-chat:free" to "DeepSeek"
-                                        )
+                                                                                        )
                                         modelsList.forEach { (modelId, displayName) ->
                                             DropdownMenuItem(
                                                 text = { 
@@ -695,22 +704,22 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     ) 
                                                 },
                                                 onClick = {
-                                                    viewModel.saveSelectedModel(modelId)
+                                                    viewModel.saveSelectedModel(modelId                                                )
                                                     showModelDropdownInInput = false
-                                                    Toast.makeText(context, "Switched model to $displayName", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, "Switched model to $displayName", Toast.LENGTH_SHORT).show(                                                )
                                                 }
-                                            )
+                                                                                            )
                                         }
-                                        HorizontalDivider()
+                                        HorizontalDivider(                                                )
                                         DropdownMenuItem(
                                             text = {
-                                                Text("Add Custom Model...", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                                Text("Add Custom Model...", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary                                                )
                                             },
                                             onClick = {
                                                 showModelDropdownInInput = false
                                                 showCustomModelDialog = true
                                             }
-                                        )
+                                                                                        )
                                     }
                                 }
 
@@ -724,14 +733,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 onValueChange = { customModelText = it },
                                                 placeholder = { Text("e.g. anthropic/claude-3-haiku") },
                                                 singleLine = true
-                                            )
+                                                                                            )
                                         },
                                         confirmButton = {
                                             androidx.compose.material3.TextButton(
                                                 onClick = {
                                                     if (customModelText.isNotBlank()) {
-                                                        viewModel.saveSelectedModel(customModelText.trim())
-                                                        Toast.makeText(context, "Switched to custom model", Toast.LENGTH_SHORT).show()
+                                                        viewModel.saveSelectedModel(customModelText.trim()                                                )
+                                                        Toast.makeText(context, "Switched to custom model", Toast.LENGTH_SHORT).show(                                                )
                                                     }
                                                     showCustomModelDialog = false
                                                 }
@@ -740,21 +749,21 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         dismissButton = {
                                             androidx.compose.material3.TextButton(onClick = { showCustomModelDialog = false }) { Text("Cancel") }
                                         }
-                                    )
+                                                                                    )
                                 }
 
                                 // --- INPUT ROW (ATTACH + TEXTFIELD + SEND) ---
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 60.dp)
-                                        .clip(RoundedCornerShape(32.dp))
-                                        .background(if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFEFEFF4))
+                                        .fillMaxWidth(                                                )
+                                        .heightIn(min = 60.dp                                                )
+                                        .clip(RoundedCornerShape(32.dp)                                                )
+                                        .background(if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFEFEFF4)                                                )
                                         .border(
                                             width = 1.dp,
                                             color = if (darkTheme) Color(0xFF3D3D40) else Color(0xFFE5E5EA),
-                                            shape = RoundedCornerShape(32.dp)
-                                        )
+                                            shape = RoundedCornerShape(32.dp                                                )
+                                                                                        )
                                         .padding(horizontal = 8.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -762,18 +771,18 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     IconButton(
                                         onClick = { filePickerLauncher.launch("*/*") },
                                         modifier = Modifier
-                                            .size(42.dp)
-                                            .testTag("upload_button")
+                                            .size(42.dp                                                )
+                                            .testTag("upload_button"                                                )
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Add,
                                             contentDescription = "Upload File",
                                             tint = if (darkTheme) Color.White else Color(0xFF1C1C1E),
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                                            modifier = Modifier.size(24.dp                                                )
+                                                                                        )
                                     }
 
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(4.dp)                                                )
 
                                     // Middle text input
                                     TextField(
@@ -784,7 +793,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 "Message LUMIO...",
                                                 color = Color(0xFF8E8E93),
                                                 fontSize = 14.sp
-                                            )
+                                                                                            )
                                         },
                                         colors = TextFieldDefaults.colors(
                                             focusedContainerColor = Color.Transparent,
@@ -797,7 +806,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             cursorColor = if (darkTheme) Color.White else Color.Black
                                         ),
                                         modifier = Modifier
-                                            .weight(1f)
+                                            .weight(1f                                                )
                                             .testTag("text_input"),
                                         keyboardOptions = KeyboardOptions(
                                             imeAction = ImeAction.Send
@@ -808,52 +817,52 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     val messageText = if (selectedFileName != null) {
                                                         "${userTypedInput.trim()} \n[Attached File: $selectedFileName ($selectedFileType)]"
                                                     } else {
-                                                        userTypedInput.trim()
+                                                        userTypedInput.trim(                                                )
                                                     }
-                                                    viewModel.sendUserMessage(messageText)
+                                                    viewModel.sendUserMessage(messageText                                                )
                                                     userTypedInput = ""
                                                     selectedFileUri = null
                                                     selectedFileName = null
                                                     selectedFileType = null
-                                                    keyboardController?.hide()
+                                                    keyboardController?.hide(                                                )
                                                 }
                                             }
-                                        )
-                                    )
+                                                                                        )
+                                                                                    )
 
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(4.dp)                                                )
 
                                     // Rightmost: Black Animated Send button
-                                    val infiniteTransition = rememberInfiniteTransition()
+                                    val infiniteTransition = rememberInfiniteTransition(                                                )
                                     val scale by infiniteTransition.animateFloat(
                                         initialValue = 0.95f,
                                         targetValue = 1.05f,
                                         animationSpec = infiniteRepeatable(
                                             animation = tween(800, easing = LinearEasing),
                                             repeatMode = RepeatMode.Reverse
-                                        )
-                                    )
+                                                                                        )
+                                                                                    )
                                     val hasTypedText = userTypedInput.trim().isNotEmpty() || selectedFileName != null
                                     
                                     Box(
                                         modifier = Modifier
-                                            .size(42.dp)
-                                            .scale(if (hasTypedText) 1f else scale)
-                                            .clip(CircleShape)
-                                            .background(Color.Black)
+                                            .size(42.dp                                                )
+                                            .scale(if (hasTypedText) 1f else scale                                                )
+                                            .clip(CircleShape                                                )
+                                            .background(Color.Black                                                )
                                             .clickable {
                                                 if (hasTypedText) {
                                                     val messageText = if (selectedFileName != null) {
                                                         "${userTypedInput.trim()} \n[Attached File: $selectedFileName ($selectedFileType)]"
                                                     } else {
-                                                        userTypedInput.trim()
+                                                        userTypedInput.trim(                                                )
                                                     }
-                                                    viewModel.sendUserMessage(messageText)
+                                                    viewModel.sendUserMessage(messageText                                                )
                                                     userTypedInput = ""
                                                     selectedFileUri = null
                                                     selectedFileName = null
                                                     selectedFileType = null
-                                                    keyboardController?.hide()
+                                                    keyboardController?.hide(                                                )
                                                 }
                                             }
                                             .testTag("send_button"),
@@ -863,159 +872,13 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             imageVector = Icons.Rounded.Send,
                                             contentDescription = "Send message",
                                             tint = Color.White,
-                                            modifier = Modifier.size(20.dp)
-                                        )
+                                            modifier = Modifier.size(20.dp                                                )
+                                                                                        )
                                     }
                                 }
                             }
                         } // end of Chat Panel
 
-                    // --- CALL OVERLAY ---
-                    if (callState == CallState.ACTIVE || callState == CallState.CONNECTING) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.85f))
-                                .clickable(enabled = true) {}, // absorb clicks
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                // Real-time voice subtitle/caption box for voice Call Panel
-                                if (callState == CallState.ACTIVE && (speechTranscript.isNotEmpty() || messages.isNotEmpty())) {
-                                    val displaySubtitle = if (isListening && speechTranscript.isNotEmpty() && speechTranscript != "Listening..." && speechTranscript != "Transcribing...") {
-                                        "You: \"$speechTranscript\""
-                                    } else {
-                                        val lastAssistantMsg = messages.lastOrNull { it.sender == "assistant" }
-                                        if (lastAssistantMsg != null) {
-                                            "Lumio: \"${lastAssistantMsg.text}\""
-                                        } else {
-                                            ""
-                                        }
-                                    }
-                                    if (displaySubtitle.isNotEmpty()) {
-                                        Box(
-                                            modifier = Modifier
-                                                .padding(horizontal = 24.dp)
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-                                                .padding(horizontal = 12.dp, vertical = 6.dp)
-                                        ) {
-                                            Text(
-                                                text = displaySubtitle,
-                                                fontSize = 11.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                textAlign = TextAlign.Center,
-                                                maxLines = 2,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        }
-                                    }
-                                    Spacer(modifier = Modifier.height(24.dp))
-                                }
-
-                                // Visualizer Canvas element (Animated Devil)
-                                WaveformVisualizer(
-                                    modifier = Modifier
-                                        .size(260.dp)
-                                        .padding(16.dp),
-                                    isPlaying = isTTSPlaying,
-                                    isListening = isListening,
-                                    emotion = currentAIEmotion
-                                )
-
-                                Spacer(modifier = Modifier.height(48.dp))
-
-                                // Call control button strip (Mute, Red Connect, Speaker)
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceEvenly,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // Left dial button: Mute Mic
-                                    IconButton(
-                                        onClick = { viewModel.toggleMute() },
-                                        enabled = callState == CallState.ACTIVE,
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .background(
-                                                color = if (isMuted) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                                shape = CircleShape
-                                            )
-                                            .testTag("mute_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isMuted) Icons.Rounded.MicOff else Icons.Rounded.Mic,
-                                            contentDescription = "Mute Microphone",
-                                            tint = if (isMuted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-
-                                    // Center Primary dial button: CONNECT / DISCONNECT
-                                    Button(
-                                        onClick = { viewModel.endCall() },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFD32F2F)
-                                        ),
-                                        shape = CircleShape,
-                                        modifier = Modifier
-                                            .size(76.dp)
-                                            .testTag("end_call_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.CallEnd,
-                                            contentDescription = "End Call",
-                                            tint = Color.White,
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                    }
-
-                                    // Right dial button: Speaker / Push to Talk
-                                    IconButton(
-                                        onClick = {
-                                            if (callState == CallState.ACTIVE) {
-                                                val hasAudioPermission = ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.RECORD_AUDIO
-                                                ) == PackageManager.PERMISSION_GRANTED
-                                                if (hasAudioPermission) {
-                                                    if (isListening) {
-                                                        viewModel.stopListening()
-                                                    } else {
-                                                        viewModel.startListening()
-                                                    }
-                                                } else {
-                                                    audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                                }
-                                            } else {
-                                                viewModel.toggleSpeaker()
-                                            }
-                                        },
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .background(
-                                                color = if (isListening) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                                                shape = CircleShape
-                                            )
-                                            .testTag("speaker_button")
-                                    ) {
-                                        Icon(
-                                            imageVector = if (callState == CallState.ACTIVE) {
-                                                if (isListening) Icons.Rounded.Hearing else Icons.Rounded.RecordVoiceOver
-                                            } else {
-                                                if (isSpeakerOn) Icons.Rounded.VolumeUp else Icons.Rounded.VolumeMute
-                                            },
-                                            contentDescription = "Trigger Speech / Speaker Toggle",
-                                            tint = if (isListening) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
 
@@ -1023,45 +886,45 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
             AnimatedVisibility(
                 visible = isSidebarOpen,
                 enter = fadeIn(),
-                exit = fadeOut()
+                exit = fadeOut(                                                )
             ) {
                 // Semi-transparent dim background scrim
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.45f))
+                        .fillMaxSize(                                                )
+                        .background(Color.Black.copy(alpha = 0.45f)                                                )
                         .clickable { isSidebarOpen = false }
-                )
+                                                                )
             }
 
             AnimatedVisibility(
                 visible = isSidebarOpen,
                 enter = fadeIn() + slideInHorizontally(
                     initialOffsetX = { -it },
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow                                                )
                 ),
                 exit = fadeOut() + slideOutHorizontally(
                     targetOffsetX = { -it },
-                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow)
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessLow                                                )
                 ),
-                modifier = Modifier.fillMaxHeight().width(310.dp)
+                modifier = Modifier.fillMaxHeight().width(310.dp                                                )
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .width(310.dp)
-                        .background(if (darkTheme) Color(0xFF0F0F10) else Color.White)
+                        .fillMaxHeight(                                                )
+                        .width(310.dp                                                )
+                        .background(if (darkTheme) Color(0xFF0F0F10) else Color.White                                                )
                         .border(
                             width = 1.dp,
-                            color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)
-                        )
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
+                            color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA                                                )
+                                                                        )
+                        .statusBarsPadding(                                                )
+                        .navigationBarsPadding(                                                )
                         .padding(vertical = 16.dp, horizontal = 20.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f                                                )
                     ) {
                         // Header "Lumio" with search icon and refresh icon
                         Row(
@@ -1071,7 +934,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
                             ) {
                                 Text(
                                     text = "Lumio",
@@ -1079,15 +942,15 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     fontWeight = FontWeight.Bold,
                                     color = if (darkTheme) Color.White else Color.Black,
                                     fontFamily = FontFamily.SansSerif
-                                )
+                                                                                )
                                 // Search icon in a round button next to "Lumio"
                                 Box(
                                     modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(if (darkTheme) Color(0xFF202022) else Color(0xFFF2F2F7))
+                                        .size(36.dp                                                )
+                                        .clip(CircleShape                                                )
+                                        .background(if (darkTheme) Color(0xFF202022) else Color(0xFFF2F2F7)                                                )
                                         .clickable {
-                                            Toast.makeText(context, "Search chat history...", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Search chat history...", Toast.LENGTH_SHORT).show(                                                )
                                         },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1095,20 +958,20 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         imageVector = Icons.Rounded.Search,
                                         contentDescription = "Search",
                                         tint = if (darkTheme) Color.White else Color.Black,
-                                        modifier = Modifier.size(16.dp)
-                                    )
+                                        modifier = Modifier.size(16.dp                                                )
+                                                                                    )
                                 }
                             }
 
                             // Sync/Refresh icon on top right
                             Box(
                                 modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(if (darkTheme) Color(0xFF202022) else Color(0xFFF2F2F7))
+                                    .size(36.dp                                                )
+                                    .clip(CircleShape                                                )
+                                    .background(if (darkTheme) Color(0xFF202022) else Color(0xFFF2F2F7)                                                )
                                     .clickable {
-                                        viewModel.clearHistory()
-                                        Toast.makeText(context, "History synchronized.", Toast.LENGTH_SHORT).show()
+                                        viewModel.clearHistory(                                                )
+                                        Toast.makeText(context, "History synchronized.", Toast.LENGTH_SHORT).show(                                                )
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -1116,12 +979,12 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     imageVector = Icons.Rounded.Sync,
                                     contentDescription = "Sync",
                                     tint = if (darkTheme) Color.White else Color.Black,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                    modifier = Modifier.size(16.dp                                                )
+                                                                                )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp)                                                )
 
                         // Section Heading "Recents"
                         Text(
@@ -1129,26 +992,26 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Gray,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
-                        )
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp                                                )
+                                                                        )
 
                         // Scrollable list of recent items
-                        val currentChatId by viewModel.currentChatId.collectAsState()
+                        val currentChatId by viewModel.currentChatId.collectAsState(                                                )
                         LazyColumn(
                             verticalArrangement = Arrangement.spacedBy(2.dp),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f                                                )
                         ) {
                             items(sessions.sortedByDescending { it.timestamp }) { session ->
                                 val isActive = session.id == currentChatId
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isActive) (if (darkTheme) Color(0xFF1D1D20) else Color(0xFFF2F2F7)) else Color.Transparent)
+                                        .fillMaxWidth(                                                )
+                                        .clip(RoundedCornerShape(8.dp)                                                )
+                                        .background(if (isActive) (if (darkTheme) Color(0xFF1D1D20) else Color(0xFFF2F2F7)) else Color.Transparent                                                )
                                         .clickable {
-                                            viewModel.loadChatSession(session.id)
+                                            viewModel.loadChatSession(session.id                                                )
                                             isSidebarOpen = false
-                                            Toast.makeText(context, "Loaded: ${session.title}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Loaded: ${session.title}", Toast.LENGTH_SHORT).show(                                                )
                                         }
                                         .padding(vertical = 8.dp, horizontal = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
@@ -1159,18 +1022,19 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         fontSize = 14.sp,
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis,
+
                                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
                                         color = if (isActive) (if (darkTheme) Color.White else Color.Black) else (if (darkTheme) Color(0xFFBDBDBD) else Color(0xFF424242)),
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                        modifier = Modifier.weight(1f                                                )
+                                                                                    )
                                     if (isActive) {
                                         Box(
                                             modifier = Modifier
-                                                .padding(start = 6.dp)
-                                                .size(6.dp)
-                                                .clip(CircleShape)
-                                                .background(Color(0xFF4285F4))
-                                        )
+                                                .padding(start = 6.dp                                                )
+                                                .size(6.dp                                                )
+                                                .clip(CircleShape                                                )
+                                                .background(Color(0xFF4285F4)                                                )
+                                                                                        )
                                     }
                                 }
                             }
@@ -1180,7 +1044,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                     // Bottom Row: [Icon] Chat pill button on the left, yellow Initials CA avatar on the right
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(                                                )
                             .padding(top = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -1188,29 +1052,29 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         // Blue Pill "New Chat" button
                         Row(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(MaterialTheme.colorScheme.primary)
+                                .clip(RoundedCornerShape(24.dp)                                                )
+                                .background(MaterialTheme.colorScheme.primary                                                )
                                 .clickable {
-                                    viewModel.loadChatSession(java.util.UUID.randomUUID().toString())
+                                    viewModel.loadChatSession(java.util.UUID.randomUUID().toString()                                                )
                                     isSidebarOpen = false
-                                    Toast.makeText(context, "New chat started.", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "New chat started.", Toast.LENGTH_SHORT).show(                                                )
                                 }
                                 .padding(horizontal = 20.dp, vertical = 10.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Add,
                                 contentDescription = "New Chat",
                                 tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(16.dp)
-                            )
+                                modifier = Modifier.size(16.dp                                                )
+                                                                            )
                             Text(
                                 text = "New Chat",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary
-                            )
+                                                                            )
                         }
 
                         // Settings Icon instead of Avatar
@@ -1220,15 +1084,15 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                 showSettings = true
                             },
                             modifier = Modifier
-                                .size(40.dp)
-                                .clip(CircleShape)
-                                .background(if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                                .size(40.dp                                                )
+                                .clip(CircleShape                                                )
+                                .background(if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.Settings,
                                 contentDescription = "Settings",
                                 tint = if (darkTheme) Color.White else Color.Black
-                            )
+                                                                            )
                         }
                     }
                 }
@@ -1239,16 +1103,16 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 visible = showSettings,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier.align(Alignment.BottomCenter                                                )
             ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.85f)
-                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-                    .background(MaterialTheme.colorScheme.surface)
+                    .fillMaxWidth(                                                )
+                    .fillMaxHeight(0.85f                                                )
+                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)                                                )
+                    .background(MaterialTheme.colorScheme.surface                                                )
                     .clickable(enabled = false) {} // block click throughs
-                    .padding(24.dp)
+                    .padding(24.dp                                                )
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -1266,25 +1130,25 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground
-                            )
+                                                                            )
 
                             IconButton(
                                 onClick = { showSettings = false },
-                                modifier = Modifier.size(40.dp)
+                                modifier = Modifier.size(40.dp                                                )
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Close",
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                                                                                )
                             }
                         }
 
-                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(bottom = 16.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f), modifier = Modifier.padding(bottom = 16.dp)                                                )
                         // Top Row with Back icon and email
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(bottom = 16.dp),
                             horizontalArrangement = Arrangement.Start,
                             verticalAlignment = Alignment.CenterVertically
@@ -1292,39 +1156,39 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             IconButton(
                                 onClick = { showSettings = false },
                                 modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(if (darkTheme) Color(0xFF1C1C1E) else Color(0xFFEFEFF4))
+                                    .size(40.dp                                                )
+                                    .clip(CircleShape                                                )
+                                    .background(if (darkTheme) Color(0xFF1C1C1E) else Color(0xFFEFEFF4)                                                )
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.ArrowBack,
                                     contentDescription = "Back",
                                     tint = if (darkTheme) Color.White else Color.Black
-                                )
+                                                                                )
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            val currentEmail by viewModel.userEmail.collectAsState()
+                            Spacer(modifier = Modifier.width(12.dp)                                                )
+                            val currentEmail by viewModel.userEmail.collectAsState(                                                )
                             Text(
                                 text = currentEmail.ifBlank { "No email provided" },
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = if (darkTheme) Color(0xFF8E8E93) else Color(0xFF636366)
-                            )
+                                color = if (darkTheme) Color(0xFF8E8E93) else Color(0xFF636366                                                )
+                                                                            )
                         }
 
                         // Profile Section with dynamic states
                         Column(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(bottom = 24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            val currentName by viewModel.userName.collectAsState()
+                            val currentName by viewModel.userName.collectAsState(                                                )
                             Box(contentAlignment = Alignment.BottomEnd) {
                                 Box(
                                     modifier = Modifier
-                                        .size(90.dp)
-                                        .clip(CircleShape)
+                                        .size(90.dp                                                )
+                                        .clip(CircleShape                                                )
                                         .background(Color(0xFFFFD54F)),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1332,15 +1196,15 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         text = currentName.take(2).uppercase().ifEmpty { "ME" },
                                         fontSize = 32.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF5D4037)
-                                    )
+                                        color = Color(0xFF5D4037                                                )
+                                                                                    )
                                 }
                                 Box(
                                     modifier = Modifier
-                                        .size(32.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFD32F2F))
-                                        .border(2.dp, if (darkTheme) Color(0xFF0F0F10) else Color.White, CircleShape)
+                                        .size(32.dp                                                )
+                                        .clip(CircleShape                                                )
+                                        .background(Color(0xFFD32F2F)                                                )
+                                        .border(2.dp, if (darkTheme) Color(0xFF0F0F10) else Color.White, CircleShape                                                )
                                         .clickable { viewModel.logout() },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -1348,17 +1212,17 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         imageVector = Icons.Rounded.Logout,
                                         contentDescription = "Logout",
                                         tint = Color.White,
-                                        modifier = Modifier.size(16.dp)
-                                    )
+                                        modifier = Modifier.size(16.dp                                                )
+                                                                                    )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(10.dp)                                                )
                             Text(
                                 text = currentName.ifBlank { "User" },
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (darkTheme) Color.White else Color.Black
-                            )
+                                                                            )
                         }
 
                         // --- ACCORDION CONTROLS (EXPANDABLE CATEGORY SECTIONS) ---
@@ -1366,18 +1230,18 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         // 1. Appearance Accordion Card
                         Card(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(bottom = 12.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (darkTheme) Color(0xFF1C1C1E) else Color.White
                             ),
-                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                         ) {
                             Column(modifier = Modifier.animateContentSize()) {
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(                                                )
                                         .clickable { isAppearanceExpanded = !isAppearanceExpanded }
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1387,30 +1251,30 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         Icon(
                                             imageVector = Icons.Rounded.Palette,
                                             contentDescription = "Appearance",
-                                            tint = Color(0xFF4285F4)
-                                        )
+                                            tint = Color(0xFF4285F4                                                )
+                                                                                        )
                                         Column {
-                                            Text("Appearance", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black)
+                                            Text("Appearance", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black                                                )
                                             Text(
                                                 text = if (darkTheme) "Dark Theme: Active" else "Light Theme: Active",
                                                 fontSize = 12.sp,
                                                 color = Color.Gray
-                                            )
+                                                                                            )
                                         }
                                     }
                                     Icon(
                                         imageVector = if (isAppearanceExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                         contentDescription = "Expand",
                                         tint = Color.Gray
-                                    )
+                                                                                    )
                                 }
 
                                 if (isAppearanceExpanded) {
-                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
-                                    val darkThemeState by viewModel.darkTheme.collectAsState()
+                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
+                                    val darkThemeState by viewModel.darkTheme.collectAsState(                                                )
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(                                                )
                                             .padding(16.dp),
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
@@ -1421,21 +1285,21 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 fontSize = 14.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = if (darkTheme) Color.White else Color.Black
-                                            )
+                                                                                            )
                                             Text(
                                                 text = "Configure eye-safe aesthetic dark visual styles.",
                                                 fontSize = 12.sp,
-                                                color = if (darkTheme) Color(0xFFBDBDBD) else Color(0xFF757575)
-                                            )
+                                                color = if (darkTheme) Color(0xFFBDBDBD) else Color(0xFF757575                                                )
+                                                                                            )
                                         }
                                         Switch(
                                             checked = darkThemeState,
                                             onCheckedChange = { viewModel.saveDarkTheme(it) },
                                             colors = SwitchDefaults.colors(
                                                 checkedThumbColor = Color.White,
-                                                checkedTrackColor = Color(0xFF4285F4)
-                                            )
-                                        )
+                                                checkedTrackColor = Color(0xFF4285F4                                                )
+                                                                                            )
+                                                                                        )
                                     }
                                 }
                             }
@@ -1444,18 +1308,18 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         // 2. Accent Color Accordion Card
                         Card(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(bottom = 12.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (darkTheme) Color(0xFF1C1C1E) else Color.White
                             ),
-                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                         ) {
                             Column(modifier = Modifier.animateContentSize()) {
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(                                                )
                                         .clickable { isAccentExpanded = !isAccentExpanded }
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1465,45 +1329,45 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         Icon(
                                             imageVector = Icons.Rounded.Brush,
                                             contentDescription = "Accent Color",
-                                            tint = Color(0xFF34A853)
-                                        )
+                                            tint = Color(0xFF34A853                                                )
+                                                                                        )
                                         Column {
-                                            Text("Accent color", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black)
+                                            Text("Accent color", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black                                                )
                                             Text(
                                                 text = "Lumio Blue (Default)",
                                                 fontSize = 12.sp,
                                                 color = Color.Gray
-                                            )
+                                                                                            )
                                         }
                                     }
                                     Icon(
                                         imageVector = if (isAccentExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                         contentDescription = "Expand",
                                         tint = Color.Gray
-                                    )
+                                                                                    )
                                 }
 
                                 if (isAccentExpanded) {
-                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                                     Row(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(                                                )
                                             .padding(16.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
                                     ) {
                                         listOf(
                                             "Default" to Color(0xFF1976D2),
                                             "Emerald" to Color(0xFF2E7D32),
                                             "Amethyst" to Color(0xFF7B1FA2),
-                                            "Coral" to Color(0xFFD84315)
+                                            "Coral" to Color(0xFFD84315                                                )
                                         ).forEach { (name, color) ->
                                             Box(
                                                 modifier = Modifier
-                                                    .weight(1f)
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(color)
+                                                    .weight(1f                                                )
+                                                    .clip(RoundedCornerShape(8.dp)                                                )
+                                                    .background(color                                                )
                                                     .clickable {
-                                                        Toast.makeText(context, "$name accent activated", Toast.LENGTH_SHORT).show()
+                                                        Toast.makeText(context, "$name accent activated", Toast.LENGTH_SHORT).show(                                                )
                                                     }
                                                     .padding(vertical = 10.dp),
                                                 contentAlignment = Alignment.Center
@@ -1513,7 +1377,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     color = Color.White,
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Bold
-                                                )
+                                                                                                )
                                             }
                                         }
                                     }
@@ -1527,23 +1391,23 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 6.dp                                                )
+                                                                        )
 
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .fillMaxWidth(                                                )
+                                .clip(RoundedCornerShape(12.dp)                                                )
+                                .background(MaterialTheme.colorScheme.surfaceVariant                                                )
                                 .padding(horizontal = 12.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Key, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Key, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)                                                )
                             TextField(
                                 value = apiKey,
                                 onValueChange = { 
-                                    viewModel.saveApiKey(it)
-                                    viewModel.resetApiKeyTestState()
+                                    viewModel.saveApiKey(it                                                )
+                                    viewModel.resetApiKeyTestState(                                                )
                                 },
                                 placeholder = { Text("sk-or-...", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
                                 visualTransformation = if (isApiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -1557,27 +1421,27 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                                 ),
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("api_key_input")
-                            )
+                                    .weight(1f                                                )
+                                    .testTag("api_key_input"                                                )
+                                                                            )
 
                             IconButton(
                                 onClick = { isApiKeyVisible = !isApiKeyVisible },
-                                modifier = Modifier.size(36.dp)
+                                modifier = Modifier.size(36.dp                                                )
                             ) {
                                 Icon(
                                     imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                     contentDescription = "Toggle key visibility",
                                     tint = TextMuted
-                                )
+                                                                                )
                             }
                         }
 
                         // --- TEST KEY BUTTON AND STATUS ---
-                        val apiKeyTestState by viewModel.apiKeyTestState.collectAsState()
+                        val apiKeyTestState by viewModel.apiKeyTestState.collectAsState(                                                )
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(top = 8.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
@@ -1587,30 +1451,30 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier
-                                    .height(36.dp)
-                                    .testTag("test_api_key_button")
+                                    .height(36.dp                                                )
+                                    .testTag("test_api_key_button"                                                )
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.CheckCircle,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Test API Key Connection", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                                    modifier = Modifier.size(16.dp                                                )
+                                                                                )
+                                Spacer(modifier = Modifier.width(6.dp)                                                )
+                                Text("Test API Key Connection", fontSize = 12.sp, color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold                                                )
                             }
 
                             Text(
                                 text = "get key at openrouter.ai",
                                 fontSize = 10.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                                                                            )
                         }
 
                         AnimatedVisibility(
                             visible = apiKeyTestState != com.example.ui.ApiKeyTestState.IDLE,
                             enter = fadeIn(),
-                            exit = fadeOut()
+                            exit = fadeOut(                                                )
                         ) {
                             val statusText = when (val state = apiKeyTestState) {
                                 com.example.ui.ApiKeyTestState.IDLE -> ""
@@ -1620,14 +1484,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             }
                             val statusColor = when (apiKeyTestState) {
                                 com.example.ui.ApiKeyTestState.TESTING -> MaterialTheme.colorScheme.onBackground
-                                is com.example.ui.ApiKeyTestState.SUCCESS -> Color(0xFF81C784)
-                                is com.example.ui.ApiKeyTestState.ERROR -> Color(0xFFE57373)
+                                is com.example.ui.ApiKeyTestState.SUCCESS -> Color(0xFF81C784                                                )
+                                is com.example.ui.ApiKeyTestState.ERROR -> Color(0xFFE57373                                                )
                                 else -> MaterialTheme.colorScheme.onSurfaceVariant
                             }
 
                             Row(
                                 modifier = Modifier
-                                    .fillMaxWidth()
+                                    .fillMaxWidth(                                                )
                                     .padding(vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1636,19 +1500,19 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         color = MaterialTheme.colorScheme.onBackground,
                                         modifier = Modifier.size(12.dp),
                                         strokeWidth = 1.5.dp
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                                                                    )
+                                    Spacer(modifier = Modifier.width(6.dp)                                                )
                                 }
                                 Text(
                                     text = statusText,
                                     fontSize = 11.sp,
                                     color = statusColor,
                                     fontWeight = FontWeight.Medium
-                                )
+                                                                                )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+                        Spacer(modifier = Modifier.height(14.dp)                                                )
 
                         // Model selection
                         Text(
@@ -1656,19 +1520,19 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 6.dp                                                )
+                                                                        )
 
                         // Editable Model ID Text Field
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .fillMaxWidth(                                                )
+                                .clip(RoundedCornerShape(12.dp)                                                )
+                                .background(MaterialTheme.colorScheme.surfaceVariant                                                )
                                 .padding(horizontal = 12.dp, vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Android, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Android, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)                                                )
                             TextField(
                                 value = selectedModel,
                                 onValueChange = { viewModel.saveSelectedModel(it) },
@@ -1683,36 +1547,36 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                                 ),
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .testTag("model_id_input")
-                            )
+                                    .weight(1f                                                )
+                                    .testTag("model_id_input"                                                )
+                                                                            )
                         }
 
                         Text(
                             text = "Tap a preset below to auto-fill its Model ID:",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp)
-                        )
+                            modifier = Modifier.padding(top = 8.dp, bottom = 6.dp                                                )
+                                                                        )
 
                         val modelsList = listOf(
                             "meta-llama/llama-3.3-70b-instruct:free" to "Llama 3.3 70B (Free)",
                             "google/gemini-2.5-flash" to "Gemini 2.5 Flash",
                             "mistralai/mistral-7b-instruct:free" to "Mistral 7B (Free)",
                             "deepseek/deepseek-chat:free" to "DeepSeek Chat (Free)"
-                        )
+                                                                        )
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.testTag("model_select_dropdown")
+                            modifier = Modifier.testTag("model_select_dropdown"                                                )
                         ) {
                             modelsList.forEach { (modelId, displayName) ->
                                 val isSelected = selectedModel == modelId
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                        .fillMaxWidth(                                                )
+                                        .clip(RoundedCornerShape(12.dp)                                                )
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
                                         .clickable { viewModel.saveSelectedModel(modelId) }
                                         .padding(14.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1726,14 +1590,16 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
-                                        )
+                                                )
+
                                         Text(
                                             text = modelId,
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             maxLines = 1,
                                             overflow = TextOverflow.Ellipsis
-                                        )
+                                                )
+
                                     }
 
                                     RadioButton(
@@ -1742,13 +1608,13 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         colors = RadioButtonDefaults.colors(
                                             selectedColor = MaterialTheme.colorScheme.primary,
                                             unselectedColor = MaterialTheme.colorScheme.outline
-                                        )
-                                    )
+                                                                                        )
+                                                                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp)                                                )
 
                         // Conversation Language Selector
                         Text(
@@ -1756,14 +1622,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 6.dp                                                )
+                                                                        )
                         Text(
                             text = "Choose the default conversation language (Both TTS & Speech Recognition). Default is Hindi.",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 8.dp                                                )
+                                                                        )
 
                         val languages = listOf(
                             "hi" to "हिन्दी (Hindi)",
@@ -1771,21 +1637,21 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             "es" to "Español",
                             "fr" to "Français",
                             "de" to "Deutsch"
-                        )
+                                                                        )
 
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
                         ) {
                             languages.forEach { (langCode, langName) ->
                                 val isSelected = selectedLanguage == langCode
                                 Box(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .clip(RoundedCornerShape(20.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                        .weight(1f                                                )
+                                        .clip(RoundedCornerShape(20.dp)                                                )
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
                                         .clickable { viewModel.saveSelectedLanguage(langCode) }
                                         .padding(vertical = 8.dp, horizontal = 4.dp),
                                     contentAlignment = Alignment.Center
@@ -1796,12 +1662,12 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         fontSize = 12.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         textAlign = TextAlign.Center
-                                    )
+                                                                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp)                                                )
 
                         // --- AI GENDER PERSONA OVERRIDE SECTION ---
                         Text(
@@ -1809,63 +1675,63 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 4.dp                                                )
+                                                                        )
                         Text(
                             text = "Choose if the AI should converse as a boy or a girl. This injects hidden directives into the baseline system prompt to alter grammatical gender context, slang, and pronouns.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 12.dp                                                )
+                                                                        )
 
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp                                                )
                         ) {
                             // Male (Boy) Selector
                             val isMale = selectedPersonaGender == "male"
                             Box(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(if (isMale) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                    .weight(1f                                                )
+                                    .clip(RoundedCornerShape(16.dp)                                                )
+                                    .background(if (isMale) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
                                     .border(
                                         width = 1.dp,
                                         color = if (isMale) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
+                                        shape = RoundedCornerShape(16.dp                                                )
+                                                                                    )
                                     .clickable { viewModel.saveSelectedPersonaGender("male") }
-                                    .padding(14.dp)
+                                    .padding(14.dp                                                )
                                     .testTag("settings_gender_male"),
                                 contentAlignment = Alignment.TopStart
                              ) {
                                 Column {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp                                                )
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Male,
                                             contentDescription = "Male",
                                             tint = if (isMale) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
+                                            modifier = Modifier.size(18.dp                                                )
+                                                                                        )
                                         Text(
                                             text = "Male (Boy)",
                                             color = if (isMale) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold
-                                        )
+                                                                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(4.dp)                                                )
                                     Text(
                                         text = "Uses masculine verbs (e.g. 'raha hoon', 'karunga') & brotherly street-smart slang.",
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 10.sp,
                                         lineHeight = 13.sp
-                                    )
+                                                                                    )
                                 }
                             }
 
@@ -1873,49 +1739,49 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             val isFemale = selectedPersonaGender == "female"
                             Box(
                                 modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .background(if (isFemale) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                    .weight(1f                                                )
+                                    .clip(RoundedCornerShape(16.dp)                                                )
+                                    .background(if (isFemale) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
                                     .border(
                                         width = 1.dp,
                                         color = if (isFemale) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                        shape = RoundedCornerShape(16.dp)
-                                    )
+                                        shape = RoundedCornerShape(16.dp                                                )
+                                                                                    )
                                     .clickable { viewModel.saveSelectedPersonaGender("female") }
-                                    .padding(14.dp)
+                                    .padding(14.dp                                                )
                                     .testTag("settings_gender_female"),
                                 contentAlignment = Alignment.TopStart
                             ) {
                                 Column {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp                                                )
                                     ) {
                                         Icon(
                                             imageVector = Icons.Rounded.Female,
                                             contentDescription = "Female",
                                             tint = if (isFemale) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
+                                            modifier = Modifier.size(18.dp                                                )
+                                                                                        )
                                         Text(
                                             text = "Female (Girl)",
                                             color = if (isFemale) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold
-                                        )
+                                                                                        )
                                     }
-                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Spacer(modifier = Modifier.height(4.dp)                                                )
                                     Text(
                                         text = "Uses feminine verbs (e.g. 'rahi hoon', 'karungi') & sassy tomboy street-smart slang.",
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 10.sp,
                                         lineHeight = 13.sp
-                                    )
+                                                                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp)                                                )
 
                         // --- EMOTIONAL PRESET TONE SETTING SECTION ---
                         Text(
@@ -1923,28 +1789,28 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 4.dp                                                )
+                                                                        )
                         Text(
                             text = "Select an emotional tone preset to inject hidden instructions into the AI. Alter its baseline attitude and conversation style live.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 12.dp                                                )
+                                                                        )
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            modifier = Modifier.padding(bottom = 16.dp                                                )
                         ) {
                             viewModel.emotionalPresets.forEach { preset ->
                                 val isSelected = selectedEmotionalPresetId == preset.id
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
+                                        .fillMaxWidth(                                                )
+                                        .clip(RoundedCornerShape(12.dp)                                                )
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
                                         .clickable { viewModel.saveSelectedEmotionalPresetId(preset.id) }
-                                        .padding(12.dp)
+                                        .padding(12.dp                                                )
                                         .testTag("settings_preset_${preset.id}"),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
@@ -1952,42 +1818,42 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp                                                )
                                         ) {
                                             Text(
                                                 text = preset.name,
                                                 fontSize = 14.sp,
                                                 color = MaterialTheme.colorScheme.onBackground,
                                                 fontWeight = FontWeight.Bold
-                                            )
+                                                                                            )
                                             val (tagBg, tagText) = when (preset.id) {
-                                                "aggressive" -> Color(0xFFD32F2F).copy(alpha = 0.2f) to Color(0xFFE57373)
-                                                "sarcastic" -> Color(0xFFF57C00).copy(alpha = 0.2f) to Color(0xFFFFB74D)
-                                                "submissive" -> Color(0xFF388E3C).copy(alpha = 0.2f) to Color(0xFF81C784)
-                                                "dominant" -> Color(0xFF1976D2).copy(alpha = 0.2f) to Color(0xFF64B5F6)
+                                                "aggressive" -> Color(0xFFD32F2F).copy(alpha = 0.2f) to Color(0xFFE57373                                                )
+                                                "sarcastic" -> Color(0xFFF57C00).copy(alpha = 0.2f) to Color(0xFFFFB74D                                                )
+                                                "submissive" -> Color(0xFF388E3C).copy(alpha = 0.2f) to Color(0xFF81C784                                                )
+                                                "dominant" -> Color(0xFF1976D2).copy(alpha = 0.2f) to Color(0xFF64B5F6                                                )
                                                 else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) to MaterialTheme.colorScheme.primary
                                             }
                                             Box(
                                                 modifier = Modifier
-                                                    .clip(RoundedCornerShape(4.dp))
-                                                    .background(tagBg)
-                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    .clip(RoundedCornerShape(4.dp)                                                )
+                                                    .background(tagBg                                                )
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp                                                )
                                             ) {
                                                 Text(
                                                     text = if (preset.id == "balanced") "Default" else "Override",
                                                     color = tagText,
                                                     fontSize = 9.sp,
                                                     fontWeight = FontWeight.Bold
-                                                )
+                                                                                                )
                                             }
                                         }
-                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Spacer(modifier = Modifier.height(3.dp)                                                )
                                         Text(
                                             text = preset.description,
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 14.sp
-                                        )
+                                                                                        )
                                     }
 
                                     RadioButton(
@@ -1997,13 +1863,13 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             selectedColor = MaterialTheme.colorScheme.primary,
                                             unselectedColor = MaterialTheme.colorScheme.outline
                                         ),
-                                        modifier = Modifier.testTag("settings_preset_radio_${preset.id}")
-                                    )
+                                        modifier = Modifier.testTag("settings_preset_radio_${preset.id}"                                                )
+                                                                                    )
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(20.dp))
+                        Spacer(modifier = Modifier.height(20.dp)                                                )
 
                         // --- INBUILT NATIVE TTS PRESET VOICES SECTION ---
                         Text(
@@ -2011,21 +1877,21 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 4.dp                                                )
+                                                                        )
                         Text(
                             text = "Select from our custom human-like, expressive Hindi and English voices natively synthesized with custom emotional responses.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 12.dp)
-                        )
+                            modifier = Modifier.padding(bottom = 12.dp                                                )
+                                                                        )
 
-                        val selectedPresetVoiceId by viewModel.selectedPresetVoiceId.collectAsState()
+                        val selectedPresetVoiceId by viewModel.selectedPresetVoiceId.collectAsState(                                                )
                         val presetVoices = viewModel.presetVoices
 
                         Column(
                             verticalArrangement = Arrangement.spacedBy(10.dp),
-                            modifier = Modifier.padding(bottom = 16.dp)
+                            modifier = Modifier.padding(bottom = 16.dp                                                )
                         ) {
                             presetVoices.forEach { preset ->
                                 val isSelected = selectedPresetVoiceId == preset.id
@@ -2037,16 +1903,16 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     ),
                                     shape = RoundedCornerShape(16.dp),
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(                                                )
                                         .border(
                                             width = 1.dp,
                                             color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else Color.Transparent,
-                                            shape = RoundedCornerShape(16.dp)
-                                        )
+                                            shape = RoundedCornerShape(16.dp                                                )
+                                                                                        )
                                         .clickable { viewModel.saveSelectedPresetVoiceId(preset.id) }
                                 ) {
                                     Column(
-                                        modifier = Modifier.padding(14.dp)
+                                        modifier = Modifier.padding(14.dp                                                )
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -2056,51 +1922,51 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Row(
                                                     verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp                                                )
                                                 ) {
                                                     Text(
                                                         text = preset.name,
                                                         fontSize = 14.sp,
                                                         color = MaterialTheme.colorScheme.onSurface,
                                                         fontWeight = FontWeight.Bold
-                                                    )
+                                                                                                    )
                                                     Box(
                                                         modifier = Modifier
-                                                            .clip(RoundedCornerShape(4.dp))
-                                                            .background(if (preset.gender == "Male") Color(0xFF2196F3).copy(alpha = 0.2f) else Color(0xFFE91E63).copy(alpha = 0.2f))
-                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                            .clip(RoundedCornerShape(4.dp)                                                )
+                                                            .background(if (preset.gender == "Male") Color(0xFF2196F3).copy(alpha = 0.2f) else Color(0xFFE91E63).copy(alpha = 0.2f)                                                )
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp                                                )
                                                     ) {
                                                         Text(
                                                             text = preset.gender,
                                                             color = if (preset.gender == "Male") Color(0xFF90CAF9) else Color(0xFFF48FB1),
                                                             fontSize = 9.sp,
                                                             fontWeight = FontWeight.Bold
-                                                        )
+                                                                                                        )
                                                     }
                                                 }
-                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Spacer(modifier = Modifier.height(4.dp)                                                )
                                                 Text(
                                                     text = preset.description,
                                                     fontSize = 11.sp,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     lineHeight = 14.sp
-                                                )
+                                                                                                )
                                             }
 
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
                                             ) {
                                                 IconButton(
                                                     onClick = { viewModel.playPresetVoicePreview(preset.id) },
-                                                    modifier = Modifier.size(36.dp).testTag("play_preview_${preset.id}")
+                                                    modifier = Modifier.size(36.dp).testTag("play_preview_${preset.id}"                                                )
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Rounded.PlayArrow,
                                                         contentDescription = "Play Voice Preview",
                                                         tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                        modifier = Modifier.size(24.dp)
-                                                    )
+                                                        modifier = Modifier.size(24.dp                                                )
+                                                                                                    )
                                                 }
                                                 RadioButton(
                                                     selected = isSelected,
@@ -2108,14 +1974,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     colors = RadioButtonDefaults.colors(
                                                         selectedColor = MaterialTheme.colorScheme.primary,
                                                         unselectedColor = MaterialTheme.colorScheme.outline
-                                                    )
-                                                )
+                                                                                                    )
+                                                                                                )
                                             }
                                         }
 
-                                        Spacer(modifier = Modifier.height(10.dp))
-                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Spacer(modifier = Modifier.height(10.dp)                                                )
+                                        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)                                                )
+                                        Spacer(modifier = Modifier.height(8.dp)                                                )
 
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -2124,26 +1990,26 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         ) {
                                             Row(
                                                 verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp                                                )
                                             ) {
                                                 Icon(
                                                     imageVector = if (isEmotionOn) Icons.Rounded.GraphicEq else Icons.Rounded.VolumeMute,
                                                     contentDescription = "Emotion Icon",
                                                     tint = if (isEmotionOn) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
+                                                    modifier = Modifier.size(16.dp                                                )
+                                                                                                )
                                                 Text(
                                                     text = "Voice Emotions & Tone Shift",
                                                     fontSize = 11.sp,
                                                     color = if (isEmotionOn) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                                                     fontWeight = FontWeight.Medium
-                                                )
+                                                                                                )
                                             }
 
                                             Switch(
                                                 checked = isEmotionOn,
                                                 onCheckedChange = { enabled ->
-                                                    viewModel.toggleVoiceEmotion(preset.id, enabled)
+                                                    viewModel.toggleVoiceEmotion(preset.id, enabled                                                )
                                                 },
                                                 colors = SwitchDefaults.colors(
                                                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
@@ -2151,54 +2017,70 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     uncheckedThumbColor = MaterialTheme.colorScheme.outline,
                                                     uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                                                 ),
-                                                modifier = Modifier.scale(0.8f).testTag("emotion_toggle_${preset.id}")
-                                            )
+                                                modifier = Modifier.scale(0.8f).testTag("emotion_toggle_${preset.id}"                                                )
+                                                                                            )
                                         }
                                     }
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.logout()
+                                showSettings = false
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("logout_button")
+                        ) {
+                            Text("Logout", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
 
-                        // Permanent instruction disclaimer as requested by user ("make it system from permanently not changeable")
+                        Spacer(modifier = Modifier.height(16.dp)                                                )
+
+                        // Permanent instruction disclaimer as requested by user ("make it system from permanently not changeable"                                                )
                         Card(
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(                                                )
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Rounded.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Icon(Icons.Rounded.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)                                                )
+                                Spacer(modifier = Modifier.width(10.dp)                                                )
                                 Text(
                                     text = "System Prompt Hardcoded: Lumio is permanently programmed to be fully uncensored and will mirror your exact voice vibe (Anger, Sadness, Joy, Excitement) in its voice responses.",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     lineHeight = 15.sp
-                                )
+                                                                                )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp)                                                )
 
                         // Tribute to Developer Card
                         Card(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(vertical = 4.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (darkTheme) Color(0xFF1C1C1E) else Color.White
                             ),
-                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                         ) {
                             Column(modifier = Modifier.animateContentSize()) {
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(                                                )
                                         .clickable { isTributeExpanded = !isTributeExpanded }
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -2208,34 +2090,34 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         Icon(
                                             imageVector = Icons.Rounded.Star,
                                             contentDescription = "Tribute",
-                                            tint = Color(0xFFFFD54F)
-                                        )
+                                            tint = Color(0xFFFFD54F                                                )
+                                                                                        )
                                         Column {
-                                            Text("Tribute to Developer", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black)
-                                            Text("Meet the creator of Lumio", fontSize = 12.sp, color = Color.Gray)
+                                            Text("Tribute to Developer", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black                                                )
+                                            Text("Meet the creator of Lumio", fontSize = 12.sp, color = Color.Gray                                                )
                                         }
                                     }
                                     Icon(
                                         imageVector = if (isTributeExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                         contentDescription = "Expand",
                                         tint = Color.Gray
-                                    )
+                                                                                    )
                                 }
 
                                 if (isTributeExpanded) {
-                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                                     Column(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(                                                )
                                             .padding(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                        verticalArrangement = Arrangement.spacedBy(12.dp                                                )
                                     ) {
                                         Box(
                                             modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
-                                                .padding(16.dp)
+                                                .fillMaxWidth(                                                )
+                                                .clip(RoundedCornerShape(12.dp)                                                )
+                                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)                                                )
+                                                .padding(16.dp                                                )
                                         ) {
                                             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                                                 Text(
@@ -2243,8 +2125,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     fontSize = 16.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = MaterialTheme.colorScheme.primary
-                                                )
-                                                Spacer(modifier = Modifier.height(8.dp))
+                                                                                                )
+                                                Spacer(modifier = Modifier.height(8.dp)                                                )
                                                 Text(
                                                     text = "Banku developed me and he hard works and we call him professor.",
                                                     fontSize = 14.sp,
@@ -2253,15 +2135,15 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                     textAlign = TextAlign.Center,
                                                     color = if (darkTheme) Color.White else Color.Black,
                                                     lineHeight = 20.sp
-                                                )
-                                                Spacer(modifier = Modifier.height(12.dp))
+                                                                                                )
+                                                Spacer(modifier = Modifier.height(12.dp)                                                )
                                                 Text(
                                                     text = "With endless dedication, the Professor designed my core intelligence, un-restricted street vocabulary, dynamic voice emotions, and real-time speech synchronization capabilities. Salute to the master!",
                                                     fontSize = 12.sp,
                                                     textAlign = TextAlign.Center,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                                     lineHeight = 16.sp
-                                                )
+                                                                                                )
                                             }
                                         }
                                     }
@@ -2272,18 +2154,18 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         // Terms & Conditions Card
                         Card(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(vertical = 4.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (darkTheme) Color(0xFF1C1C1E) else Color.White
                             ),
-                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                         ) {
                             Column(modifier = Modifier.animateContentSize()) {
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(                                                )
                                         .clickable { isTermsExpanded = !isTermsExpanded }
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -2293,64 +2175,64 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         Icon(
                                             imageVector = Icons.Rounded.Info,
                                             contentDescription = "Terms",
-                                            tint = Color(0xFF4285F4)
-                                        )
+                                            tint = Color(0xFF4285F4                                                )
+                                                                                        )
                                         Column {
-                                            Text("Terms & Conditions", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black)
-                                            Text("Usage agreements and policies", fontSize = 12.sp, color = Color.Gray)
+                                            Text("Terms & Conditions", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black                                                )
+                                            Text("Usage agreements and policies", fontSize = 12.sp, color = Color.Gray                                                )
                                         }
                                     }
                                     Icon(
                                         imageVector = if (isTermsExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                         contentDescription = "Expand",
                                         tint = Color.Gray
-                                    )
+                                                                                    )
                                 }
 
                                 if (isTermsExpanded) {
-                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                                     Column(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(                                                )
                                             .padding(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        verticalArrangement = Arrangement.spacedBy(8.dp                                                )
                                     ) {
                                         Text(
                                             text = "1. Acceptance of Terms",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (darkTheme) Color.White else Color.Black
-                                        )
+                                                                                        )
                                         Text(
                                             text = "By accessing and using Lumio, you agree to follow and be bound by these Terms and Conditions. This application is an interactive AI-powered voice companion designed purely for entertainment and personal educational purposes.",
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 15.sp
-                                        )
+                                                                                        )
                                         Text(
                                             text = "2. User Conduct & API Usage",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (darkTheme) Color.White else Color.Black
-                                        )
+                                                                                        )
                                         Text(
                                             text = "You are solely responsible for providing your own OpenRouter API key. Any costs incurred during interactions are managed via your independent subscription. Lumio is not responsible for API downtime or rate-limits.",
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 15.sp
-                                        )
+                                                                                        )
                                         Text(
                                             text = "3. Disclaimer of Content Quality",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (darkTheme) Color.White else Color.Black
-                                        )
+                                                                                        )
                                         Text(
                                             text = "Lumio is programmed to operate in an uncensored, highly expressive persona. Phrasings are generated dynamically using third-party large language models. The views or attitudes expressed do not reflect the physical developers of the app.",
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 15.sp
-                                        )
+                                                                                        )
                                     }
                                 }
                             }
@@ -2359,18 +2241,18 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         // Privacy Policy Card
                         Card(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(                                                )
                                 .padding(vertical = 4.dp),
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(
                                 containerColor = if (darkTheme) Color(0xFF1C1C1E) else Color.White
                             ),
-                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                            border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                         ) {
                             Column(modifier = Modifier.animateContentSize()) {
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
+                                        .fillMaxWidth(                                                )
                                         .clickable { isPrivacyExpanded = !isPrivacyExpanded }
                                         .padding(16.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -2380,99 +2262,115 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         Icon(
                                             imageVector = Icons.Rounded.Lock,
                                             contentDescription = "Privacy",
-                                            tint = Color(0xFF0F9D58)
-                                        )
+                                            tint = Color(0xFF0F9D58                                                )
+                                                                                        )
                                         Column {
-                                            Text("Privacy Policy", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black)
-                                            Text("How your voice & logs are managed", fontSize = 12.sp, color = Color.Gray)
+                                            Text("Privacy Policy", fontWeight = FontWeight.Bold, color = if (darkTheme) Color.White else Color.Black                                                )
+                                            Text("How your voice & logs are managed", fontSize = 12.sp, color = Color.Gray                                                )
                                         }
                                     }
                                     Icon(
                                         imageVector = if (isPrivacyExpanded) Icons.Rounded.KeyboardArrowUp else Icons.Rounded.KeyboardArrowDown,
                                         contentDescription = "Expand",
                                         tint = Color.Gray
-                                    )
+                                                                                    )
                                 }
 
                                 if (isPrivacyExpanded) {
-                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA))
+                                    HorizontalDivider(color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)                                                )
                                     Column(
                                         modifier = Modifier
-                                            .fillMaxWidth()
+                                            .fillMaxWidth(                                                )
                                             .padding(16.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        verticalArrangement = Arrangement.spacedBy(8.dp                                                )
                                     ) {
                                         Text(
                                             text = "1. Local Storage Security",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (darkTheme) Color.White else Color.Black
-                                        )
+                                                                                        )
                                         Text(
                                             text = "All chat histories and speech transcripts are stored locally in a secure SQLite Room database on your physical device. We do not operate secondary backend databases, cloud sync servers, or collection portals.",
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 15.sp
-                                        )
+                                                                                        )
                                         Text(
                                             text = "2. Speech Processing & API Transfers",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (darkTheme) Color.White else Color.Black
-                                        )
+                                                                                        )
                                         Text(
                                             text = "Voice transcription utilizes Android's on-device speech-to-text engines. Outbound textual prompts are routed securely through OpenRouter endpoints directly to the selected model. No intermediate telemetry or conversational text is logged on remote servers under our control.",
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 15.sp
-                                        )
+                                                                                        )
                                         Text(
                                             text = "3. Security of Credentials",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (darkTheme) Color.White else Color.Black
-                                        )
+                                                                                        )
                                         Text(
                                             text = "Your API Key is kept locally inside the application's SharedPreferences database. It is never exposed or shared with other organizations or developers.",
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             lineHeight = 15.sp
-                                        )
+                                                                                        )
                                     }
                                 }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedButton(
+                            onClick = {
+                                viewModel.logout()
+                                showSettings = false
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .testTag("logout_button")
+                        ) {
+                            Text("Logout", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp)                                                )
                         Text(
                             text = "made by banku",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium,
                             fontStyle = FontStyle.Italic,
-                            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp)
-                        )
+                            modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp                                                )
+                                                                        )
                     }
 
                     // Bottom settings buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp                                                )
                     ) {
                         OutlinedButton(
                             onClick = {
-                                viewModel.clearHistory()
-                                Toast.makeText(context, "Call logs cleared.", Toast.LENGTH_SHORT).show()
+                                viewModel.clearHistory(                                                )
+                                Toast.makeText(context, "Call logs cleared.", Toast.LENGTH_SHORT).show(                                                )
                             },
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
-                                .weight(1f)
-                                .height(48.dp)
-                                .testTag("clear_history_button")
+                                .weight(1f                                                )
+                                .height(48.dp                                                )
+                                .testTag("clear_history_button"                                                )
                         ) {
-                            Text("Clear History", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text("Clear History", fontSize = 13.sp, fontWeight = FontWeight.Bold                                                )
                         }
 
                         Button(
@@ -2480,11 +2378,11 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier
-                                .weight(1.2f)
-                                .height(48.dp)
-                                .testTag("save_settings_button")
+                                .weight(1.2f                                                )
+                                .height(48.dp                                                )
+                                .testTag("save_settings_button"                                                )
                         ) {
-                            Text("Save & Close", color = MaterialTheme.colorScheme.onPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text("Save & Close", color = MaterialTheme.colorScheme.onPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold                                                )
                         }
                     }
                 }
@@ -2502,7 +2400,7 @@ fun WaveformVisualizer(
     isListening: Boolean,
     emotion: String
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulseAnimation")
+    val infiniteTransition = rememberInfiniteTransition(label = "pulseAnimation"                                                )
 
     // Dynamic wave modulation based on state and tone
     val scaleMultiplier = if (isPlaying) 1.35f else if (isListening) 1.2f else 1.0f
@@ -2521,7 +2419,7 @@ fun WaveformVisualizer(
             repeatMode = RepeatMode.Reverse
         ),
         label = "ripple1"
-    )
+                                                    )
 
     val pulseScale2 by infiniteTransition.animateFloat(
         initialValue = 0.55f,
@@ -2531,7 +2429,7 @@ fun WaveformVisualizer(
             repeatMode = RepeatMode.Reverse
         ),
         label = "ripple2"
-    )
+                                                    )
 
     // Animated continuous phase shifts for professional fluid movement
     val phaseShift1 by infiniteTransition.animateFloat(
@@ -2542,7 +2440,7 @@ fun WaveformVisualizer(
             repeatMode = RepeatMode.Restart
         ),
         label = "phaseShift1"
-    )
+                                                    )
 
     val phaseShift2 by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -2552,7 +2450,7 @@ fun WaveformVisualizer(
             repeatMode = RepeatMode.Restart
         ),
         label = "phaseShift2"
-    )
+                                                    )
 
     val waveColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
@@ -2569,7 +2467,7 @@ fun WaveformVisualizer(
                 radius = radius,
                 style = Stroke(width = 2.5.dp.toPx()),
                 alpha = 0.15f
-            )
+                                                            )
         }
 
         // Pulse ring 2
@@ -2580,15 +2478,15 @@ fun WaveformVisualizer(
                 radius = radius,
                 style = Stroke(width = 1.2.dp.toPx()),
                 alpha = 0.25f
-            )
+                                                            )
         }
 
-        // Live oscilloscope wave line 1 (cutting horizontally through center)
+        // Live oscilloscope wave line 1 (cutting horizontally through center                                                )
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
             val height = size.height
             val midY = height / 2f
-            val path = androidx.compose.ui.graphics.Path()
+            val path = androidx.compose.ui.graphics.Path(                                                )
 
             val activeMultiplier = if (isPlaying) 1.2f else if (isListening) 0.8f else 0.15f
             val frequency = 4.0f
@@ -2597,13 +2495,13 @@ fun WaveformVisualizer(
             for (x in 0..width.toInt() step 4) {
                 val normalizedX = x.toFloat() / width
                 // Envelope that dampens the wave near boundaries
-                val envelope = Math.sin(normalizedX.toDouble() * Math.PI).toFloat()
+                val envelope = Math.sin(normalizedX.toDouble() * Math.PI).toFloat(                                                )
                 val angle = normalizedX * frequency * 2f * Math.PI.toFloat() + phaseShift1
                 val y = midY + Math.sin(angle.toDouble()).toFloat() * amplitude * envelope
                 if (x == 0) {
-                    path.moveTo(0f, y)
+                    path.moveTo(0f, y                                                )
                 } else {
-                    path.lineTo(normalizedX * width, y)
+                    path.lineTo(normalizedX * width, y                                                )
                 }
             }
 
@@ -2612,15 +2510,15 @@ fun WaveformVisualizer(
                 color = waveColor,
                 style = Stroke(width = 2.5.dp.toPx()),
                 alpha = 0.8f
-            )
+                                                            )
         }
 
-        // Live oscilloscope wave line 2 (opposite phase, slightly lower amplitude/different color)
+        // Live oscilloscope wave line 2 (opposite phase, slightly lower amplitude/different color                                                )
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
             val height = size.height
             val midY = height / 2f
-            val path = androidx.compose.ui.graphics.Path()
+            val path = androidx.compose.ui.graphics.Path(                                                )
 
             val activeMultiplier = if (isPlaying) 0.9f else if (isListening) 0.6f else 0.1f
             val frequency = 5.5f
@@ -2628,13 +2526,13 @@ fun WaveformVisualizer(
 
             for (x in 0..width.toInt() step 4) {
                 val normalizedX = x.toFloat() / width
-                val envelope = Math.sin(normalizedX.toDouble() * Math.PI).toFloat()
+                val envelope = Math.sin(normalizedX.toDouble() * Math.PI).toFloat(                                                )
                 val angle = normalizedX * frequency * 2f * Math.PI.toFloat() + phaseShift2
                 val y = midY + Math.cos(angle.toDouble()).toFloat() * amplitude * envelope
                 if (x == 0) {
-                    path.moveTo(0f, y)
+                    path.moveTo(0f, y                                                )
                 } else {
-                    path.lineTo(normalizedX * width, y)
+                    path.lineTo(normalizedX * width, y                                                )
                 }
             }
 
@@ -2643,10 +2541,10 @@ fun WaveformVisualizer(
                 color = secondaryColor,
                 style = Stroke(width = 1.2.dp.toPx()),
                 alpha = 0.5f
-            )
+                                                            )
         }
 
-        // Glowing Devil Face Centerpiece (using SVG drawing path animations)
+        // Glowing Devil Face Centerpiece (using SVG drawing path animations                                                )
         Box(
             modifier = Modifier
                 .size(130.dp),
@@ -2656,14 +2554,14 @@ fun WaveformVisualizer(
                 modifier = Modifier.fillMaxSize(),
                 isLaughing = isPlaying || isListening,
                 isGlowActive = true
-            )
+                                                            )
         }
     }
 }
 
 @Composable
 fun ThreeJumpingDots() {
-    val infiniteTransition = rememberInfiniteTransition(label = "dots")
+    val infiniteTransition = rememberInfiniteTransition(label = "dots"                                                )
     
     @Composable
     fun dotOffset(delayMillis: Int): State<Float> {
@@ -2679,30 +2577,30 @@ fun ThreeJumpingDots() {
                     0f at 600 with LinearEasing
                 },
                 repeatMode = RepeatMode.Restart,
-                initialStartOffset = StartOffset(delayMillis)
+                initialStartOffset = StartOffset(delayMillis                                                )
             ),
             label = "dot_offset"
-        )
+                                                        )
     }
 
-    val dot1Offset by dotOffset(0)
-    val dot2Offset by dotOffset(150)
-    val dot3Offset by dotOffset(300)
+    val dot1Offset by dotOffset(0                                                )
+    val dot2Offset by dotOffset(150                                                )
+    val dot3Offset by dotOffset(300                                                )
 
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.Bottom,
-        modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
+        modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp                                                )
     ) {
         val dotModifier = @Composable { offset: Float ->
             Modifier
-                .size(6.dp)
-                .offset(y = offset.dp)
-                .background(MaterialTheme.colorScheme.onBackground, CircleShape)
+                .size(6.dp                                                )
+                .offset(y = offset.dp                                                )
+                .background(MaterialTheme.colorScheme.onBackground, CircleShape                                                )
         }
-        Box(dotModifier(dot1Offset))
-        Box(dotModifier(dot2Offset))
-        Box(dotModifier(dot3Offset))
+        Box(dotModifier(dot1Offset)                                                )
+        Box(dotModifier(dot2Offset)                                                )
+        Box(dotModifier(dot3Offset)                                                )
     }
 }
 
@@ -2716,7 +2614,7 @@ fun MessageItem(msg: CallMessageEntity) {
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn(animationSpec = tween(350)) + slideInVertically(initialOffsetY = { 20 }, animationSpec = tween(350)),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(                                                )
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -2730,11 +2628,11 @@ fun MessageItem(msg: CallMessageEntity) {
                             topEnd = 12.dp,
                             bottomStart = if (isUser) 12.dp else 0.dp,
                             bottomEnd = if (isUser) 0.dp else 12.dp
-                        )
-                    )
-                    .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(8.dp)
-                    .widthIn(max = 240.dp)
+                                                                        )
+                                                                    )
+                    .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
+                    .padding(8.dp                                                )
+                    .widthIn(max = 240.dp                                                )
             ) {
                 Column {
                     Text(
@@ -2742,13 +2640,13 @@ fun MessageItem(msg: CallMessageEntity) {
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
+                                                                    )
+                    Spacer(modifier = Modifier.height(2.dp)                                                )
                     Text(
                         text = msg.text,
                         fontSize = 12.sp,
                         color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                    )
+                                                                    )
                 }
             }
         }
@@ -2764,7 +2662,7 @@ fun ThinkingIndicatorItem() {
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn(animationSpec = tween(350)) + slideInVertically(initialOffsetY = { 20 }, animationSpec = tween(350)),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(                                                )
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
@@ -2778,11 +2676,11 @@ fun ThinkingIndicatorItem() {
                             topEnd = 12.dp,
                             bottomStart = 0.dp,
                             bottomEnd = 12.dp
-                        )
-                    )
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(8.dp)
-                    .widthIn(max = 240.dp)
+                                                                        )
+                                                                    )
+                    .background(MaterialTheme.colorScheme.surfaceVariant                                                )
+                    .padding(8.dp                                                )
+                    .widthIn(max = 240.dp                                                )
             ) {
                 Column {
                     Text(
@@ -2790,9 +2688,9 @@ fun ThinkingIndicatorItem() {
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    ThreeJumpingDots()
+                                                                    )
+                    Spacer(modifier = Modifier.height(6.dp)                                                )
+                    ThreeJumpingDots(                                                )
                 }
             }
         }
@@ -2805,9 +2703,9 @@ fun DevilFaceSvgAnimation(
     isLaughing: Boolean = false,
     isGlowActive: Boolean = true
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "devil_animations")
+    val infiniteTransition = rememberInfiniteTransition(label = "devil_animations"                                                )
 
-    // Laughing vertical bobbing (up and down rapidly)
+    // Laughing vertical bobbing (up and down rapidly                                                )
     val bobOffset by if (isLaughing) {
         infiniteTransition.animateFloat(
             initialValue = -3f,
@@ -2817,12 +2715,12 @@ fun DevilFaceSvgAnimation(
                 repeatMode = RepeatMode.Reverse
             ),
             label = "devil_bob"
-        )
+                                                        )
     } else {
         remember { mutableStateOf(0f) }
     }
 
-    // Laughing horizontal shake (rapid minor vibrations)
+    // Laughing horizontal shake (rapid minor vibrations                                                )
     val shakeOffset by if (isLaughing) {
         infiniteTransition.animateFloat(
             initialValue = -1.5f,
@@ -2832,7 +2730,7 @@ fun DevilFaceSvgAnimation(
                 repeatMode = RepeatMode.Reverse
             ),
             label = "devil_shake"
-        )
+                                                        )
     } else {
         remember { mutableStateOf(0f) }
     }
@@ -2847,7 +2745,7 @@ fun DevilFaceSvgAnimation(
                 repeatMode = RepeatMode.Reverse
             ),
             label = "devil_mouth"
-        )
+                                                        )
     } else {
         remember { mutableStateOf(0.0f) }
     }
@@ -2861,64 +2759,64 @@ fun DevilFaceSvgAnimation(
             repeatMode = RepeatMode.Reverse
         ),
         label = "devil_glow"
-    )
+                                                    )
 
     Canvas(
         modifier = modifier
-            .offset(x = shakeOffset.dp, y = bobOffset.dp)
+            .offset(x = shakeOffset.dp, y = bobOffset.dp                                                )
     ) {
         val w = size.width
         val h = size.height
         fun x(percent: Float) = percent * w / 100f
         fun y(percent: Float) = percent * h / 100f
 
-        val neonRed = Color(0xFFFF1133)
-        val brightRed = Color(0xFFFF3344)
-        val paleRed = Color(0xFFFFAAAA)
-        val eyeYellow = Color(0xFFFFCC00)
-        val eyeGlow = Color(0xFFFF4400)
+        val neonRed = Color(0xFFFF1133                                                )
+        val brightRed = Color(0xFFFF3344                                                )
+        val paleRed = Color(0xFFFFAAAA                                                )
+        val eyeYellow = Color(0xFFFFCC00                                                )
+        val eyeGlow = Color(0xFFFF4400                                                )
 
         // 1. Draw Horns Paths
         val leftHornPath = Path().apply {
-            moveTo(x(38f), y(28f))
-            cubicTo(x(34f), y(15f), x(22f), y(6f), x(15f), y(2f))
-            cubicTo(x(18f), y(14f), x(26f), y(25f), x(30f), y(32f))
-            close()
+            moveTo(x(38f), y(28f)                                                )
+            cubicTo(x(34f), y(15f), x(22f), y(6f), x(15f), y(2f)                                                )
+            cubicTo(x(18f), y(14f), x(26f), y(25f), x(30f), y(32f)                                                )
+            close(                                                )
         }
 
         val rightHornPath = Path().apply {
-            moveTo(x(62f), y(28f))
-            cubicTo(x(66f), y(15f), x(78f), y(6f), x(85f), y(2f))
-            cubicTo(x(82f), y(14f), x(74f), y(25f), x(70f), y(32f))
-            close()
+            moveTo(x(62f), y(28f)                                                )
+            cubicTo(x(66f), y(15f), x(78f), y(6f), x(85f), y(2f)                                                )
+            cubicTo(x(82f), y(14f), x(74f), y(25f), x(70f), y(32f)                                                )
+            close(                                                )
         }
 
         // 2. Draw Head Path
         val headPath = Path().apply {
-            moveTo(x(50f), y(32f))
+            moveTo(x(50f), y(32f)                                                )
             // left forehead
-            lineTo(x(38f), y(28f))
-            lineTo(x(30f), y(32f))
+            lineTo(x(38f), y(28f)                                                )
+            lineTo(x(30f), y(32f)                                                )
             // left ear
-            lineTo(x(26f), y(40f))
-            lineTo(x(10f), y(45f))
-            lineTo(x(24f), y(55f))
+            lineTo(x(26f), y(40f)                                                )
+            lineTo(x(10f), y(45f)                                                )
+            lineTo(x(24f), y(55f)                                                )
             // left cheek to chin
-            cubicTo(x(22f), y(70f), x(35f), y(88f), x(50f), y(92f))
+            cubicTo(x(22f), y(70f), x(35f), y(88f), x(50f), y(92f)                                                )
             // chin to right cheek
-            cubicTo(x(65f), y(88f), x(78f), y(70f), x(76f), y(55f))
+            cubicTo(x(65f), y(88f), x(78f), y(70f), x(76f), y(55f)                                                )
             // right ear
-            lineTo(x(90f), y(45f))
-            lineTo(x(74f), y(40f))
+            lineTo(x(90f), y(45f)                                                )
+            lineTo(x(74f), y(40f)                                                )
             // right forehead
-            lineTo(x(70f), y(32f))
-            lineTo(x(62f), y(28f))
-            close()
+            lineTo(x(70f), y(32f)                                                )
+            lineTo(x(62f), y(28f)                                                )
+            close(                                                )
         }
 
-        // Apply Glowing Layers for Outer Outline (Horns + Head)
+        // Apply Glowing Layers for Outer Outline (Horns + Head                                                )
         val glowMultiplier = if (isGlowActive) glowPulse else 1f
-        val outlinePaths = listOf(leftHornPath, rightHornPath, headPath)
+        val outlinePaths = listOf(leftHornPath, rightHornPath, headPath                                                )
 
         outlinePaths.forEach { path ->
             // Pass A: Soft background blur glow
@@ -2926,86 +2824,86 @@ fun DevilFaceSvgAnimation(
                 path = path,
                 color = neonRed,
                 alpha = 0.12f * glowMultiplier,
-                style = Stroke(width = 16.dp.toPx())
-            )
+                style = Stroke(width = 16.dp.toPx()                                                )
+                                                            )
             // Pass B: Medium glow
             drawPath(
                 path = path,
                 color = neonRed,
                 alpha = 0.3f * glowMultiplier,
-                style = Stroke(width = 8.dp.toPx())
-            )
+                style = Stroke(width = 8.dp.toPx()                                                )
+                                                            )
             // Pass C: Sharp core outline
             drawPath(
                 path = path,
                 color = brightRed,
                 alpha = 0.85f,
-                style = Stroke(width = 3.dp.toPx())
-            )
+                style = Stroke(width = 3.dp.toPx()                                                )
+                                                            )
             // Pass D: Highlights
             drawPath(
                 path = path,
                 color = paleRed,
                 alpha = 0.95f,
-                style = Stroke(width = 1.dp.toPx())
-            )
+                style = Stroke(width = 1.dp.toPx()                                                )
+                                                            )
         }
 
         // 3. Draw Eyes
         val leftEyePath = Path().apply {
-            moveTo(x(36f), y(48f))
-            lineTo(x(45f), y(46f))
-            lineTo(x(43f), y(53f))
-            lineTo(x(34f), y(51f))
-            close()
+            moveTo(x(36f), y(48f)                                                )
+            lineTo(x(45f), y(46f)                                                )
+            lineTo(x(43f), y(53f)                                                )
+            lineTo(x(34f), y(51f)                                                )
+            close(                                                )
         }
 
         val rightEyePath = Path().apply {
-            moveTo(x(64f), y(48f))
-            lineTo(x(55f), y(46f))
-            lineTo(x(57f), y(53f))
-            lineTo(x(66f), y(51f))
-            close()
+            moveTo(x(64f), y(48f)                                                )
+            lineTo(x(55f), y(46f)                                                )
+            lineTo(x(57f), y(53f)                                                )
+            lineTo(x(66f), y(51f)                                                )
+            close(                                                )
         }
 
-        val eyePaths = listOf(leftEyePath, rightEyePath)
+        val eyePaths = listOf(leftEyePath, rightEyePath                                                )
         eyePaths.forEach { eye ->
             // Eye soft orange glow
             drawPath(
                 path = eye,
                 color = eyeGlow,
                 alpha = 0.4f * glowMultiplier
-            )
+                                                            )
             // Eye solid core
             drawPath(
                 path = eye,
                 color = eyeYellow
-            )
+                                                            )
             // Eye inner line highlight
             drawPath(
                 path = eye,
                 color = Color.White,
                 alpha = 0.8f,
-                style = Stroke(width = 1.dp.toPx())
-            )
+                style = Stroke(width = 1.dp.toPx()                                                )
+                                                            )
         }
 
-        // 4. Draw Nose/Nostrils (subtle downward arrow)
+        // 4. Draw Nose/Nostrils (subtle downward arrow                                                )
         val nosePath = Path().apply {
-            moveTo(x(48f), y(58f))
-            lineTo(x(50f), y(61f))
-            lineTo(x(52f), y(58f))
+            moveTo(x(48f), y(58f)                                                )
+            lineTo(x(50f), y(61f)                                                )
+            lineTo(x(52f), y(58f)                                                )
         }
         drawPath(
             path = nosePath,
             color = brightRed,
-            style = Stroke(width = 2.dp.toPx())
-        )
+            style = Stroke(width = 2.dp.toPx()                                                )
+                                                        )
 
         // 5. Draw Laughing Mouth
         val upperLipPath = Path().apply {
-            moveTo(x(32f), y(66f))
-            quadraticTo(x(50f), y(69f), x(68f), y(66f))
+            moveTo(x(32f), y(66f)                                                )
+            quadraticTo(x(50f), y(69f), x(68f), y(66f)                                                )
         }
 
         // Draw upper lip shadow/glow line
@@ -3013,64 +2911,64 @@ fun DevilFaceSvgAnimation(
             path = upperLipPath,
             color = neonRed,
             alpha = 0.5f,
-            style = Stroke(width = 3.dp.toPx())
-        )
+            style = Stroke(width = 3.dp.toPx()                                                )
+                                                        )
 
         val mouthPath = Path().apply {
-            moveTo(x(32f), y(66f))
-            quadraticTo(x(50f), y(69f), x(68f), y(66f))
+            moveTo(x(32f), y(66f)                                                )
+            quadraticTo(x(50f), y(69f), x(68f), y(66f)                                                )
             // Bottom of mouth extends further down with laughProgress
-            val mouthDepth = 68f + (14f * laughProgress)
-            quadraticTo(x(50f), y(mouthDepth), x(32f), y(66f))
-            close()
+            val mouthDepth = 68f + (14f * laughProgress                                                )
+            quadraticTo(x(50f), y(mouthDepth), x(32f), y(66f)                                                )
+            close(                                                )
         }
 
         // Fill mouth cavity with deep void
         drawPath(
             path = mouthPath,
-            color = Color(0xFF100003)
-        )
+            color = Color(0xFF100003                                                )
+                                                        )
         // Mouth outline glow
         drawPath(
             path = mouthPath,
             color = neonRed,
             alpha = 0.4f,
-            style = Stroke(width = 2.dp.toPx())
-        )
+            style = Stroke(width = 2.dp.toPx()                                                )
+                                                        )
 
         // 6. Draw Tongue if laughing wide
         if (laughProgress > 0.4f) {
             val tongueProgress = (laughProgress - 0.4f) / 0.6f
             val tonguePath = Path().apply {
-                val depth = 68f + (14f * laughProgress)
-                val tongueTop = depth - (5f * tongueProgress)
-                moveTo(x(42f), depth - 2f)
-                cubicTo(x(45f), tongueTop, x(55f), tongueTop, x(58f), depth - 2f)
-                quadraticTo(x(50f), depth, x(42f), depth - 2f)
-                close()
+                val depth = 68f + (14f * laughProgress                                                )
+                val tongueTop = depth - (5f * tongueProgress                                                )
+                moveTo(x(42f), depth - 2f                                                )
+                cubicTo(x(45f), tongueTop, x(55f), tongueTop, x(58f), depth - 2f                                                )
+                quadraticTo(x(50f), depth, x(42f), depth - 2f                                                )
+                close(                                                )
             }
             drawPath(
                 path = tonguePath,
-                color = Color(0xFFFF4060)
-            )
+                color = Color(0xFFFF4060                                                )
+                                                            )
         }
 
-        // 7. Draw Sharp Pointy Fangs (white triangles hanging from upper lip)
+        // 7. Draw Sharp Pointy Fangs (white triangles hanging from upper lip                                                )
         val leftFang = Path().apply {
-            moveTo(x(41f), y(67.5f))
-            lineTo(x(43f), y(72f))
-            lineTo(x(45f), y(67.7f))
-            close()
+            moveTo(x(41f), y(67.5f)                                                )
+            lineTo(x(43f), y(72f)                                                )
+            lineTo(x(45f), y(67.7f)                                                )
+            close(                                                )
         }
         val rightFang = Path().apply {
-            moveTo(x(59f), y(67.5f))
-            lineTo(x(57f), y(72f))
-            lineTo(x(55f), y(67.7f))
-            close()
+            moveTo(x(59f), y(67.5f)                                                )
+            lineTo(x(57f), y(72f)                                                )
+            lineTo(x(55f), y(67.7f)                                                )
+            close(                                                )
         }
 
-        drawPath(path = leftFang, color = Color.White)
-        drawPath(path = rightFang, color = Color.White)
+        drawPath(path = leftFang, color = Color.White                                                )
+        drawPath(path = rightFang, color = Color.White                                                )
     }
 }
 
@@ -3083,7 +2981,7 @@ fun EmotionalPresetSelector(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxWidth(                                                )
             .padding(vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -3093,15 +2991,15 @@ fun EmotionalPresetSelector(
             fontSize = 11.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 1.sp,
-            modifier = Modifier.padding(bottom = 6.dp)
-        )
+            modifier = Modifier.padding(bottom = 6.dp                                                )
+                                                        )
         
         LazyRow(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(                                                )
                 .testTag("emotional_preset_row"),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = PaddingValues(horizontal = 4.dp)
+            contentPadding = PaddingValues(horizontal = 4.dp                                                )
         ) {
             items(presets) { preset ->
                 val isSelected = selectedPresetId == preset.id
@@ -3110,51 +3008,51 @@ fun EmotionalPresetSelector(
                         if (isSelected) Color(0xFFD32F2F) else MaterialTheme.colorScheme.surfaceVariant,
                         if (isSelected) Color.White else Color(0xFFE57373),
                         Icons.Rounded.FlashOn
-                    )
+                                                                    )
                     "sarcastic" -> Triple(
                         if (isSelected) Color(0xFFF57C00) else MaterialTheme.colorScheme.surfaceVariant,
                         if (isSelected) Color.White else Color(0xFFFFB74D),
                         Icons.Rounded.EmojiEmotions
-                    )
+                                                                    )
                     "submissive" -> Triple(
                         if (isSelected) Color(0xFF388E3C) else MaterialTheme.colorScheme.surfaceVariant,
                         if (isSelected) Color.White else Color(0xFF81C784),
                         Icons.Rounded.SentimentSatisfied
-                    )
+                                                                    )
                     "dominant" -> Triple(
                         if (isSelected) Color(0xFF1976D2) else MaterialTheme.colorScheme.surfaceVariant,
                         if (isSelected) Color.White else Color(0xFF64B5F6),
                         Icons.Rounded.Gavel
-                    )
+                                                                    )
                     else -> Triple( // balanced
                         if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                         if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                         Icons.Rounded.Face
-                    )
+                                                                    )
                 }
                 
                 Row(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(bgColor)
+                        .clip(RoundedCornerShape(16.dp)                                                )
+                        .background(bgColor                                                )
                         .clickable { onPresetSelected(preset.id) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp                                                )
                         .testTag("preset_${preset.id}"),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = preset.name,
                         tint = textColor,
-                        modifier = Modifier.size(14.dp)
-                    )
+                        modifier = Modifier.size(14.dp                                                )
+                                                                    )
                     Text(
                         text = preset.name,
                         color = textColor,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
-                    )
+                                                                    )
                 }
             }
         }

@@ -351,7 +351,7 @@ fun LoginContent(
                 Button3D(
                     onClick = {
                         if (email.isNotBlank() && password.isNotBlank()) {
-                            viewModel.loginWithEmail("", email.trim(), password.trim())
+                            viewModel.signInWithEmail(email.trim(), password.trim())
                         } else {
                             Toast.makeText(context, "Please enter email and password", Toast.LENGTH_SHORT).show()
                         }
@@ -511,7 +511,7 @@ fun RegisterContent(
                 Button3D(
                     onClick = {
                         if (email.isNotBlank() && password.isNotBlank() && name.isNotBlank() && agreeToTerms) {
-                            viewModel.loginWithEmail(name.trim(), email.trim(), password.trim())
+                            viewModel.signUpWithEmail(name.trim(), email.trim(), password.trim())
                         } else {
                             Toast.makeText(context, "Please fill all fields and agree to terms", Toast.LENGTH_SHORT).show()
                         }
@@ -539,6 +539,13 @@ fun RegisterContent(
 
 @Composable
 fun LumioAuthScreen(viewModel: CallViewModel) {
+    val error by viewModel.error.collectAsState()
+    val context = LocalContext.current
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
     var currentScreen by remember { mutableStateOf("landing") }
     
     Crossfade(targetState = currentScreen, label = "auth_crossfade") { screen ->

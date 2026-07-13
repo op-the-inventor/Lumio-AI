@@ -26,7 +26,7 @@ import java.util.Locale
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeout
-import io.github.jan.supabase.gotrue.auth
+import io.github.jan.supabase.auth.auth
 
 enum class CallState {
     IDLE,
@@ -825,46 +825,48 @@ Do not forget the tone tag!
         }
     }
 
-    fun loginWithEmail(name: String, email: String, password: String) {
+    fun signInWithEmail(email: String, password: String) {
         viewModelScope.launch {
             try {
-                com.example.data.api.supabase.auth.signInWith(io.github.jan.supabase.gotrue.providers.builtin.Email) {
+                com.example.data.api.supabase.auth.signInWith(io.github.jan.supabase.auth.providers.builtin.Email) {
+                    this.email = email
+                    this.password = password
+                }
+                login("User", email)
+            } catch (e: Throwable) {
+                e.printStackTrace()
+                _error.value = "Login failed: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun signUpWithEmail(name: String, email: String, password: String) {
+        viewModelScope.launch {
+            try {
+                com.example.data.api.supabase.auth.signUpWith(io.github.jan.supabase.auth.providers.builtin.Email) {
                     this.email = email
                     this.password = password
                 }
                 login(if (name.isBlank()) email.substringBefore("@") else name, email)
             } catch (e: Throwable) {
-                // If login fails, try to sign up
-                try {
-                    com.example.data.api.supabase.auth.signUpWith(io.github.jan.supabase.gotrue.providers.builtin.Email) {
-                        this.email = email
-                        this.password = password
-                    }
-                    login(if (name.isBlank()) email.substringBefore("@") else name, email)
-                } catch (e2: Exception) {
-                    e2.printStackTrace()
-                    // Fallback to mock login if Supabase configuration is missing or failing
-                    login(if (name.isBlank()) email.substringBefore("@") else name, email)
-                }
+                e.printStackTrace()
+                _error.value = "Sign up failed: ${e.localizedMessage}"
             }
         }
     }
-
     fun loginWithProvider(provider: String, context: android.content.Context? = null) {
         viewModelScope.launch {
             try {
                 when (provider) {
-                    "google" -> com.example.data.api.supabase.auth.signInWith(io.github.jan.supabase.gotrue.providers.Google)
+                    "google" -> com.example.data.api.supabase.auth.signInWith(io.github.jan.supabase.auth.providers.Google)
                 }
                 login(provider.replaceFirstChar { it.uppercase() } + " User", "user@${provider}.com")
             } catch (e: Throwable) {
                 e.printStackTrace()
-                // Fallback to mock
-                login(provider.replaceFirstChar { it.uppercase() } + " User", "user@${provider}.com")
+                _error.value = "Provider login failed: ${e.localizedMessage}"
             }
         }
     }
-
     fun logout() {
         _userName.value = ""
         _userEmail.value = ""
