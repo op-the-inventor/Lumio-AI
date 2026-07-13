@@ -106,9 +106,9 @@ dependencies {
   implementation(libs.converter.moshi)
   implementation(platform("io.github.jan-tennert.supabase:bom:2.5.0"))
   implementation("io.github.jan-tennert.supabase:gotrue-kt")
-  implementation("io.ktor:ktor-client-android:2.3.11")
-  implementation("io.ktor:ktor-client-content-negotiation:2.3.11")
-  implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.11")
+  implementation("io.ktor:ktor-client-android:3.0.3")
+  implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
+  implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
   implementation(libs.firebase.ai)
   // Uncomment to use Firestore:
   // implementation(libs.firebase.firestore)
