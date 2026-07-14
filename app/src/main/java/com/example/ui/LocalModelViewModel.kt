@@ -44,11 +44,12 @@ class LocalModelViewModel : ViewModel() {
     private val _downloadStatus = MutableStateFlow<String>("")
     val downloadStatus: StateFlow<String> = _downloadStatus.asStateFlow()
 
-    fun searchModels(query: String) {
+    fun searchModels(query: String, apiKey: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val results = api.searchModels(query)
+                val auth = if (apiKey.isNotBlank()) "Bearer $apiKey" else null
+                val results = api.searchModels(auth, query)
                 _searchResults.value = results
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -58,11 +59,12 @@ class LocalModelViewModel : ViewModel() {
         }
     }
 
-    fun loadModelFiles(modelId: String) {
+    fun loadModelFiles(modelId: String, apiKey: String) {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val files = api.getModelFiles(modelId).filter { it.path.endsWith(".gguf") }
+                val auth = if (apiKey.isNotBlank()) "Bearer $apiKey" else null
+                val files = api.getModelFiles(auth, modelId).filter { it.path.endsWith(".gguf") }
                 _modelFiles.value = files
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -72,26 +74,38 @@ class LocalModelViewModel : ViewModel() {
         }
     }
 
-    fun downloadModel(context: Context, modelId: String, file: HfFile) {
+    fun downloadModel(context: Context, modelId: String, file: HfFile, apiKey: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _downloadProgress.value = 0f
             _downloadStatus.value = "Starting download..."
             try {
                 val url = "https://huggingface.co/$modelId/resolve/main/${file.path}"
-                val connection = URL(url).openConnection()
-                connection.connect()
-                val fileLength = connection.contentLength
-
+                val client = OkHttpClient.Builder().followRedirects(true).followSslRedirects(true).build()
+                val requestBuilder = okhttp3.Request.Builder().url(url)
+                if (apiKey.isNotBlank()) requestBuilder.addHeader("Authorization", "Bearer $apiKey")
+                val request = requestBuilder.build()
+                val response = client.newCall(request).execute()
+                
+                if (!response.isSuccessful) {
+                    throw Exception("Unexpected code $response")
+                }
+                
+                val body = response.body
+                if (body == null) {
+                    throw Exception("Response body is null")
+                }
+                
+                val fileLength = body.contentLength()
                 val dir = File(context.filesDir, "models")
                 if (!dir.exists()) dir.mkdirs()
+                
                 val outputFile = File(dir, file.path.substringAfterLast("/"))
-
-                val input = connection.getInputStream()
+                val input = body.byteStream()
                 val output = FileOutputStream(outputFile)
-
-                val data = ByteArray(4096)
+                val data = ByteArray(8192)
                 var total: Long = 0
                 var count: Int
+                
                 while (input.read(data).also { count = it } != -1) {
                     total += count.toLong()
                     if (fileLength > 0) {
@@ -103,6 +117,7 @@ class LocalModelViewModel : ViewModel() {
                 output.flush()
                 output.close()
                 input.close()
+                
                 _downloadStatus.value = "Download complete: ${outputFile.absolutePath}"
                 _downloadProgress.value = 1f
             } catch (e: Exception) {

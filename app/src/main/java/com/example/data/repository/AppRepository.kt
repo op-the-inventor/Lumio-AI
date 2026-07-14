@@ -62,6 +62,11 @@ class AppRepository(
         callMessageDao.clearHistoryByChatId(id)
     }
 
+    
+    suspend fun insertMessageDirectly(message: com.example.data.database.CallMessageEntity) {
+        callMessageDao.insertMessage(message)
+    }
+
     suspend fun addMessage(chatId: String, sender: String, text: String, emotion: String) {
         callMessageDao.insertMessage(
             CallMessageEntity(

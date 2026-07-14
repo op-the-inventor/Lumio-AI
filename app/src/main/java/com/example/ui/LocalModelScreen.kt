@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun LocalModelScreen(
     onBack: () -> Unit,
     onModelSelected: (String) -> Unit,
+    hfApiKey: String,
     viewModel: LocalModelViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -38,6 +39,13 @@ fun LocalModelScreen(
     val downloadStatus by viewModel.downloadStatus.collectAsState()
 
     var selectedModel by remember { mutableStateOf<String?>(null) }
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        if (searchResults.isEmpty()) {
+            viewModel.searchModels("", hfApiKey)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -63,10 +71,18 @@ fun LocalModelScreen(
                 label = { Text("Search Hugging Face (e.g. Llama-3-8B-GGUF)") },
                 modifier = Modifier.fillMaxWidth(),
                 trailingIcon = {
-                    IconButton(onClick = { viewModel.searchModels(searchQuery) }) {
+                    IconButton(onClick = { 
+                        keyboardController?.hide()
+                        viewModel.searchModels(searchQuery, hfApiKey) 
+                    }) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
                 },
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { 
+                    keyboardController?.hide()
+                    viewModel.searchModels(searchQuery, hfApiKey) 
+                }),
                 singleLine = true
             )
             
@@ -77,34 +93,40 @@ fun LocalModelScreen(
             }
 
             if (selectedModel == null) {
-                if (searchResults.isEmpty() && !isLoading) {
-                    Text("Recommended for Mobile", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
-                    val recommendedModels = listOf(
-                        "bartowski/Llama-3.2-1B-Instruct-GGUF",
-                        "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
-                        "Qwen/Qwen2.5-1.5B-Instruct-GGUF",
-                        "microsoft/Phi-3-mini-4k-instruct-gguf",
-                        "Qwen/Qwen1.5-0.5B-Chat-GGUF"
-                    )
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(recommendedModels) { modelId ->
+                val dir = java.io.File(context.filesDir, "models")
+                val downloadedFiles = dir.listFiles()?.filter { it.name.endsWith(".gguf") } ?: emptyList()
+                if (downloadedFiles.isNotEmpty()) {
+                    Text("Downloaded Models", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    LazyColumn(modifier = Modifier.weight(if (searchResults.isEmpty()) 1f else 0.5f)) {
+                        items(downloadedFiles) { file ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp)
-                                    .clickable { 
-                                        selectedModel = modelId
-                                        viewModel.loadModelFiles(modelId)
-                                    }
                             ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    Text(text = modelId, fontWeight = FontWeight.Bold)
-                                    Text(text = "Tap to view GGUF files", fontSize = 12.sp)
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(text = file.name, fontWeight = FontWeight.Bold)
+                                        Text(text = "Size: ${file.length() / (1024 * 1024)} MB", fontSize = 12.sp)
+                                    }
+                                    Button(onClick = {
+                                        onModelSelected(file.absolutePath)
+                                        onBack()
+                                        android.widget.Toast.makeText(context, "Loaded local model ${file.name}", android.widget.Toast.LENGTH_SHORT).show()
+                                    }) {
+                                        Text("Load")
+                                    }
                                 }
                             }
                         }
                     }
-                } else {
+                }
+                
+                if (searchResults.isNotEmpty()) {
+                    Text(if (searchQuery.isBlank()) "Trending GGUF Models" else "Search Results", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(searchResults) { model ->
                             Card(
@@ -113,7 +135,7 @@ fun LocalModelScreen(
                                     .padding(vertical = 4.dp)
                                     .clickable { 
                                         selectedModel = model.id
-                                        viewModel.loadModelFiles(model.id)
+                                        viewModel.loadModelFiles(model.id, hfApiKey)
                                     }
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
@@ -160,7 +182,7 @@ fun LocalModelScreen(
                                     Text(text = "Size: ${sizeMb} MB", fontSize = 12.sp)
                                     Text(text = "Est. Speed: $estRate", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
                                 }
-                                IconButton(onClick = { viewModel.downloadModel(context, selectedModel!!, file) }) {
+                                IconButton(onClick = { viewModel.downloadModel(context, selectedModel!!, file, hfApiKey) }) {
                                     Icon(Icons.Default.Download, contentDescription = "Download")
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))

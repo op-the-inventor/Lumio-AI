@@ -160,7 +160,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
 
     // Gather states
     val darkTheme by viewModel.darkTheme.collectAsState(                                                )
-    val apiKey by viewModel.apiKey.collectAsState(                                                )
+    val apiKey by viewModel.apiKey.collectAsState()
+    val hfApiKey by viewModel.hfApiKey.collectAsState()
     val selectedModel by viewModel.selectedModel.collectAsState(                                                )
     val callState by viewModel.callState.collectAsState(                                                )
     val isMuted by viewModel.isMuted.collectAsState(                                                )
@@ -177,6 +178,15 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     val selectedLanguage by viewModel.selectedLanguage.collectAsState(                                                )
     val selectedEmotionalPresetId by viewModel.selectedEmotionalPresetId.collectAsState(                                                )
     val selectedPersonaGender by viewModel.selectedPersonaGender.collectAsState(                                                )
+
+    val importLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            viewModel.importChatHistory(context, uri)
+        }
+    }
+
     val voiceEmotionSettings by viewModel.voiceEmotionSettings.collectAsState(                                                )
 
     // Screen navigation overlays
@@ -1239,6 +1249,30 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Hugging Face API Key",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        OutlinedTextField(
+                            value = hfApiKey,
+                            onValueChange = { viewModel.saveHfApiKey(it) },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            placeholder = { Text("hf_...", fontSize = 13.sp) },
+                            visualTransformation = if (isApiKeyVisible) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { isApiKeyVisible = !isApiKeyVisible }) {
+                                    Icon(
+                                        imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        )
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                         Icon(
                                             imageVector = Icons.Rounded.Brush,
@@ -2262,6 +2296,32 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                         )
                     }
 
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.exportChatHistory(context) },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(48.dp)
+                        ) {
+                            Text("Export JSON", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                        
+                        OutlinedButton(
+                            onClick = { importLauncher.launch("application/json") },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).height(48.dp)
+                        ) {
+                            Text("Import JSON", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
                     // Bottom settings buttons
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -2307,9 +2367,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.85f)
-                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                    .fillMaxSize()
                     .background(MaterialTheme.colorScheme.surface)
                     .clickable(enabled = false) {}
             ) {
@@ -2318,7 +2376,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                     onModelSelected = { modelPath ->
                         viewModel.saveSelectedModel(modelPath)
                         showLocalModels = false
-                    }
+                    },
+                    hfApiKey = hfApiKey
                 )
             }
         }
