@@ -96,7 +96,7 @@ class LocalModelViewModel : ViewModel() {
                 }
                 
                 val fileLength = body.contentLength()
-                val dir = File(context.filesDir, "models")
+                val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 if (!dir.exists()) dir.mkdirs()
                 
                 val outputFile = File(dir, file.path.substringAfterLast("/"))
@@ -129,7 +129,7 @@ class LocalModelViewModel : ViewModel() {
     }
 
     fun getEstimateTokenRate(context: Context, modelSizeMb: Long): String {
-        val ram = getTotalRAM(context)
+        val ram = getTotalRAM(context) / 1024
         return if (modelSizeMb < 2000) {
             "~15-20 tok/s"
         } else if (modelSizeMb < 4000) {
@@ -143,10 +143,54 @@ class LocalModelViewModel : ViewModel() {
         }
     }
 
-    private fun getTotalRAM(context: Context): Long {
+    fun getTotalRAM(context: Context): Long {
         val actManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
         actManager.getMemoryInfo(memInfo)
-        return memInfo.totalMem / (1024 * 1024 * 1024)
+        return memInfo.totalMem / (1024 * 1024)
+    }
+
+    fun getFreeRAM(context: Context): Long {
+        val actManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memInfo = ActivityManager.MemoryInfo()
+        actManager.getMemoryInfo(memInfo)
+        return memInfo.availMem / (1024 * 1024)
+    }
+
+    fun importModelFromUri(context: Context, uri: android.net.Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _downloadProgress.value = 0f
+            _downloadStatus.value = "Importing file..."
+            try {
+                val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                if (!dir.exists()) dir.mkdirs()
+                
+                var fileName = "imported_model.gguf"
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    if (cursor.moveToFirst() && nameIndex >= 0) {
+                        fileName = cursor.getString(nameIndex)
+                    }
+                }
+                
+                val outputFile = File(dir, fileName)
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    FileOutputStream(outputFile).use { output ->
+                        val buffer = ByteArray(8192)
+                        var read: Int
+                        while (input.read(buffer).also { read = it } != -1) {
+                            output.write(buffer, 0, read)
+                        }
+                    }
+                }
+                
+                _downloadStatus.value = "Import complete: ${outputFile.absolutePath}"
+                _downloadProgress.value = 1f
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _downloadStatus.value = "Import failed: ${e.message}"
+                _downloadProgress.value = null
+            }
+        }
     }
 }

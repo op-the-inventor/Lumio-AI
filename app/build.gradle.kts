@@ -15,6 +15,11 @@ android {
   compileSdk { version = release(36) { minorApiLevel = 1 } }
 
   defaultConfig {
+        externalNativeBuild {
+            cmake {
+                cppFlags += "-std=c++17"
+            }
+        }
     applicationId = "com.lumio.ai"
     minSdk = 24
     targetSdk = 36
@@ -47,6 +52,13 @@ android {
       keyPassword = "android"
     }
   }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
 
   buildTypes {
     release {
@@ -109,6 +121,7 @@ dependencies {
   implementation("io.ktor:ktor-client-android:3.0.3")
   implementation("io.ktor:ktor-client-content-negotiation:3.0.3")
   implementation("io.ktor:ktor-serialization-kotlinx-json:3.0.3")
+
   implementation(libs.firebase.ai)
   // Uncomment to use Firestore:
   // implementation(libs.firebase.firestore)

@@ -1,0 +1,157 @@
+cat << 'INNER_EOF' > app/src/main/java/com/example/ui/CallViewModel.kt.patch
+    // OpenRouter API call
+    fun sendUserMessage(text: String) {
+        if (text.trim().isEmpty()) return
+        
+        val isLocalModel = _selectedModel.value.endsWith(".gguf")
+        
+        if (!isLocalModel && _apiKey.value.trim().isEmpty()) {
+            _error.value = "OpenRouter API Key is missing. Check Settings!"
+            return
+        }
+
+        viewModelScope.launch {
+            _error.value = null
+            _isGenerating.value = true
+            val currentChat = _currentChatId.value
+            
+            val isFirstMessage = _messages.value.isEmpty()
+            if (isFirstMessage && currentChat != "default") {
+                repository.createChatSession(currentChat, "New Chat")
+            }
+
+            // Add user message to local database (Room)
+            repository.addMessage(currentChat, "user", text, "NORMAL")
+
+            // Wait brief moment and fetch response
+            try {
+                val apiKey = _apiKey.value.trim()
+                val model = _selectedModel.value
+                val history = _messages.value
+
+                // Call remote API
+                val activePreset = emotionalPresets.find { it.id == _selectedEmotionalPresetId.value } ?: emotionalPresets[0]
+                
+                // Append boy/girl persona guidelines
+                val genderPrompt = if (_selectedPersonaGender.value == "female") {
+                    "\n\nCRITICAL GENDER DIRECTION: You MUST speak, think, and act strictly as a sassy, street-smart young girl/female (tomboy 'Lumio' style). When communicating in Hindi, Hinglish, or any grammatical gender-sensitive language, you MUST refer to yourself strictly using feminine verb conjugations and pronouns (e.g., use 'main bol rahi hoon', 'main karungi', 'gayi thi', 'thak gayi', 'pyaar karti hoon' instead of masculine endings). Use girlish street terms, feminine slang, and a confident girl attitude."
+                } else {
+                    "\n\nCRITICAL GENDER DIRECTION: You MUST speak, think, and act strictly as a confident, street-smart young boy/male ('Lumio' style). When communicating in Hindi, Hinglish, or any grammatical gender-sensitive language, you MUST refer to yourself strictly using masculine verb conjugations and pronouns (e.g., use 'main bol raha hoon', 'main karunga', 'gaya tha', 'thak gaya', 'pyaar karta hoon' instead of feminine endings). Use boyish street terms, masculine slang, and a confident boy attitude."
+                }
+                
+                val customSystemPrompt = SYSTEM_PROMPT + "\n\n" + activePreset.systemInstruction + genderPrompt
+
+                _streamingMessage.value = ""
+                _streamingEmotion.value = "NORMAL"
+                var finalAiText = ""
+
+                if (isLocalModel) {
+                    val file = java.io.File(model)
+                    if (!file.exists()) {
+                        throw Exception("Local model file not found: $model")
+                    }
+                    val fullPrompt = StringBuilder()
+                    fullPrompt.append("<|im_start|>system\n").append(customSystemPrompt).append("<|im_end|>\n")
+                    for (msg in history) {
+                        if (msg.sender == "user") {
+                            fullPrompt.append("<|im_start|>user\n").append(msg.text).append("<|im_end|>\n")
+                        } else {
+                            fullPrompt.append("<|im_start|>assistant\n").append(msg.text).append("<|im_end|>\n")
+                        }
+                    }
+                    fullPrompt.append("<|im_start|>user\n").append(text).append("<|im_end|>\n")
+                    fullPrompt.append("<|im_start|>assistant\n")
+                    val responseText = StringBuilder()
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val params = de.kherud.llama.ModelParameters().setModel(model)
+                        de.kherud.llama.LlamaModel(params).use { llamaModel ->
+                            val inferParams = de.kherud.llama.InferenceParameters(fullPrompt.toString())
+                            for (out in llamaModel.generate(inferParams)) {
+                                responseText.append(out.text)
+                                _streamingMessage.value = responseText.toString()
+                            }
+                        }
+                    }
+                    val rawText = responseText.toString().trim()
+                    val regex = Regex("\\[EMOTION: (.*?)\\]", RegexOption.IGNORE_CASE)
+                    val match = regex.find(rawText)
+                    if (match != null) {
+                        _streamingEmotion.value = match.groupValues[1].uppercase()
+                        finalAiText = rawText.replace(match.value, "").trim()
+                    } else {
+                        finalAiText = rawText
+                    }
+                } else {
+                    repository.streamAICompletion(
+                        apiKey = apiKey,
+                        modelName = model,
+                        userMessage = text,
+                        history = history,
+                        systemPrompt = customSystemPrompt
+                    ).collect { chunk ->
+                        if (chunk.startsWith("[ERROR]")) throw Exception(chunk)
+                        finalAiText += chunk
+                        _streamingMessage.value = finalAiText
+                    }
+                    val regex = Regex("\\[TONE:\\s*(ANGRY|SAD|EXCITED|NORMAL)\\]", RegexOption.IGNORE_CASE)
+                    val matchResult = regex.find(finalAiText)
+                    if (matchResult != null) {
+                        _streamingEmotion.value = matchResult.groupValues[1].uppercase()
+                        finalAiText = finalAiText.replace(matchResult.value, "").trim()
+                    }
+                }
+
+                val aiText = finalAiText
+                val aiEmotion = _streamingEmotion.value
+                _streamingMessage.value = null
+
+                // Add assistant response to local database (Room)
+                repository.addMessage(currentChat, "assistant", aiText, aiEmotion)
+
+                // Call TextToSpeech with parsed emotion
+                speakAIResponse(aiText, aiEmotion)
+                
+                if (isFirstMessage && currentChat != "default") {
+                    viewModelScope.launch {
+                        try {
+                            var title = ""
+                            if (isLocalModel) {
+                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                    val params = de.kherud.llama.ModelParameters().setModel(model)
+                                    de.kherud.llama.LlamaModel(params).use { llamaModel ->
+                                        val prompt = "<|im_start|>system\nYou are a title generator. Reply ONLY with the short title.<|im_end|>\n<|im_start|>user\nBased on this message: '$text', generate a short 2-4 word topic title for this chat. Do not include quotes or any other text.<|im_end|>\n<|im_start|>assistant\n"
+                                        val inferParams = de.kherud.llama.InferenceParameters(prompt)
+                                        val responseText = java.lang.StringBuilder()
+                                        for (out in llamaModel.generate(inferParams)) {
+                                             responseText.append(out.text)
+                                        }
+                                        title = responseText.toString().trim().take(40)
+                                    }
+                                }
+                            } else {
+                                val topicResult = repository.getAICompletion(
+                                    apiKey = apiKey,
+                                    modelName = model,
+                                    userMessage = "Based on this message: '$text', generate a short 2-4 word topic title for this chat. Do not include quotes or any other text.",
+                                    history = emptyList(),
+                                    systemPrompt = "You are a title generator. Reply ONLY with the short title."
+                                )
+                                title = topicResult.first.trim().take(40)
+                            }
+                            if (title.isNotEmpty()) {
+                                repository.updateSessionTitle(currentChat, title)
+                            }
+                        } catch (e: Exception) { }
+                    }
+                }
+
+            } catch (e: Throwable) {
+                Log.e("CallViewModel", "API call failed", e)
+                _error.value = "Call failed: ${e.localizedMessage ?: "Network error"}"
+                speakAIResponse("I am sorry, but the call was disconnected due to a connection issue.", "NORMAL")
+            } finally {
+                _isGenerating.value = false
+            }
+        }
+    }
+INNER_EOF

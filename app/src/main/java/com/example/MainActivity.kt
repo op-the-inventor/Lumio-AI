@@ -46,6 +46,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -71,6 +73,7 @@ import com.example.ui.ApiKeyTestState
 import com.example.ui.CallState
 import com.example.ui.CallViewModel
 import com.example.ui.EmotionalPreset
+import com.example.ui.SplashScreen
 import com.example.ui.theme.*
 import com.example.data.database.CallMessageEntity
 
@@ -86,21 +89,28 @@ class MainActivity : ComponentActivity() {
         try { com.example.data.api.supabase.handleDeeplinks(intent) } catch (e: Throwable) { initError = e.stackTraceToString() }
         enableEdgeToEdge()
         setContent {
-            val viewModel: CallViewModel = viewModel(                                                )
-            val darkTheme by viewModel.darkTheme.collectAsState(                                                )
-            val isLoggedIn by viewModel.isLoggedIn.collectAsState(                                                )
+            val viewModel: CallViewModel = viewModel()
+            val darkTheme by viewModel.darkTheme.collectAsState()
+            val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+            var showSplash by remember { mutableStateOf(true) }
 
             MyApplicationTheme(darkTheme = darkTheme, dynamicColor = false) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    if (initError != null) {
-                        Text(initError!!, color = Color.Red, modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState())                                                )
-                    } else if (isLoggedIn) {
-                        CallScreen(viewModel = viewModel                                                )
+                    if (showSplash) {
+                        SplashScreen { showSplash = false }
                     } else {
-                        com.example.ui.LumioAuthScreen(viewModel = viewModel                                                )
+                        androidx.compose.animation.Crossfade(targetState = isLoggedIn, animationSpec = androidx.compose.animation.core.tween(500), label = "main_crossfade") { loggedIn ->
+                            if (initError != null) {
+                                Text(initError!!, color = Color.Red, modifier = Modifier.padding(16.dp).verticalScroll(rememberScrollState()))
+                            } else if (loggedIn) {
+                                CallScreen(viewModel = viewModel)
+                            } else {
+                                com.example.ui.LumioAuthScreen(viewModel = viewModel)
+                            }
+                        }
                     }
                 }
             }
@@ -172,6 +182,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     val speechTranscript by viewModel.speechTranscript.collectAsState(                                                )
     val error by viewModel.error.collectAsState(                                                )
     val messages by viewModel.messages.collectAsState(                                                )
+    val streamingMessage by viewModel.streamingMessage.collectAsState()
+    val streamingEmotion by viewModel.streamingEmotion.collectAsState()
     val sessions by viewModel.sessions.collectAsState(                                                )
     val isGenerating by viewModel.isGenerating.collectAsState(                                                )
 
@@ -192,8 +204,19 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     // Screen navigation overlays
     var showSettings by remember { mutableStateOf(false) }
     var showLocalModels by remember { mutableStateOf(false) }
+    var showPiperVoices by remember { mutableStateOf(false) }
     var isSidebarOpen by remember { mutableStateOf(false) }
     var userTypedInput by remember { mutableStateOf("") }
+    val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
+    var isFirstLaunch by remember { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        if (isFirstLaunch) {
+            kotlinx.coroutines.delay(300)
+            try { focusRequester.requestFocus() } catch(e: Exception) {}
+            isFirstLaunch = false
+        }
+    }
+
     var isApiKeyVisible by remember { mutableStateOf(false) }
 
     // Settings collapsible section states
@@ -312,75 +335,29 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 12.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Top Left Menu Button to toggle Sidebar
-                    IconButton(
-                        onClick = { isSidebarOpen = true },
-                        modifier = Modifier
-                            .size(44.dp                                                )
-                            .testTag("menu_sidebar_button"                                                )
-                    ) {
-                        MinimalistMenuIcon(color = MaterialTheme.colorScheme.onSurface                                                )
-                    }
-
-                    // Center App Title (Clean brand header                                                )
-                    Text(
-                        text = "Lumio",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.testTag("app_title"                                                )
-                                                                    )
-
-                    // Top Right Action Icons: Call AI and Temp Chat Buttons
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Call AI Button
+                        // Top Left Menu Button to toggle Sidebar
                         IconButton(
-                            onClick = {
-                                if (callState == CallState.ACTIVE) {
-                                    viewModel.endCall(                                                )
-                                    Toast.makeText(context, "Call ended", Toast.LENGTH_SHORT).show(                                                )
-                                } else {
-                                    val hasAudioPermission = ContextCompat.checkSelfPermission(
-                                        context, Manifest.permission.RECORD_AUDIO
-                                    ) == PackageManager.PERMISSION_GRANTED
-                                    if (hasAudioPermission) {
-                                        viewModel.startCall(                                                )
-                                    } else {
-                                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO                                                )
-                                    }
-                                }
-                            },
+                            onClick = { isSidebarOpen = true },
                             modifier = Modifier
-                                .size(44.dp                                                )
-                                .clip(CircleShape                                                )
-                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)                                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
-                                    shape = CircleShape
-                                                                                )
-                                .testTag("top_right_call_button"                                                )
+                                .size(44.dp)
+                                .testTag("menu_sidebar_button")
                         ) {
-                            Icon(
-                                imageVector = if (callState == CallState.ACTIVE) Icons.Rounded.PhoneInTalk else Icons.Rounded.Phone,
-                                contentDescription = "Call AI",
-                                tint = if (callState == CallState.ACTIVE) NeonGreen else MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp                                                )
-                                                                            )
+                            MinimalistMenuIcon(color = MaterialTheme.colorScheme.onSurface)
                         }
-
-                        // Temp Chat Button
+                        
+                        // Temp Chat Button moved to top left
                         Button(
                             onClick = {
-                                viewModel.clearHistory(                                                )
-                                Toast.makeText(context, "Temporary chat started (History cleared)", Toast.LENGTH_SHORT).show(                                                )
+                                viewModel.clearHistory()
+                                Toast.makeText(context, "Temporary chat started (History cleared)", Toast.LENGTH_SHORT).show()
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
@@ -390,25 +367,67 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             border = BorderStroke(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA)),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             modifier = Modifier
-                                .height(38.dp                                                )
-                                .testTag("temp_chat_button"                                                )
+                                .height(38.dp)
+                                .testTag("temp_chat_button")
                         ) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Rounded.AutoAwesome,
                                     contentDescription = "Temp Chat",
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(14.dp                                                )
-                                                                                )
+                                    modifier = Modifier.size(14.dp)
+                                )
                                 Text(
                                     text = "Temp Chat",
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
-                                                                                )
+                                )
                             }
+                        }
+                    }
+
+                    // Top Right Action Icons: Call AI
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Call AI Button
+                        IconButton(
+                            onClick = {
+                                if (callState == CallState.ACTIVE) {
+                                    viewModel.endCall()
+                                    Toast.makeText(context, "Call ended", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    val hasAudioPermission = ContextCompat.checkSelfPermission(
+                                        context, Manifest.permission.RECORD_AUDIO
+                                    ) == PackageManager.PERMISSION_GRANTED
+                                    if (hasAudioPermission) {
+                                        viewModel.startCall()
+                                    } else {
+                                        audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
+                                }
+                            },
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f))
+                                .border(
+                                    width = 1.dp,
+                                    color = if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA),
+                                    shape = CircleShape
+                                )
+                                .testTag("top_right_call_button")
+                        ) {
+                            Icon(
+                                imageVector = if (callState == CallState.ACTIVE) Icons.Rounded.PhoneInTalk else Icons.Rounded.Phone,
+                                contentDescription = "Call AI",
+                                tint = if (callState == CallState.ACTIVE) NeonGreen else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 }
@@ -429,7 +448,9 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             // --- MESSAGE STREAM (SCROLLABLE LIST) ---
                             Box(
                                 modifier = Modifier
-                                    .weight(1f                                                )
+                                    .weight(1f)
+
+
                                     .fillMaxWidth(                                                )
                                     .padding(vertical = 4.dp                                                )
                             ) {
@@ -480,125 +501,126 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 modifier = Modifier.fillMaxWidth(                                                )
                                             ) {
                                             val isUser = msg.sender == "user"
-                                            val hasAttachment = msg.text.contains("[Attached File:"                                                )
+                                            val hasAttachment = msg.text.contains("[Attached File:")
                                             val cleanText = if (hasAttachment) {
-                                                msg.text.substringBefore("[Attached File:").trim(                                                )
+                                                msg.text.substringBefore("[Attached File:").trim()
                                             } else {
                                                 msg.text
                                             }
                                             val attachmentInfo = if (hasAttachment) {
-                                                msg.text.substringAfter("[Attached File:").substringBefore("]").trim(                                                )
+                                                msg.text.substringAfter("[Attached File:").substringBefore("]").trim()
                                             } else {
                                                 null
                                             }
-
                                             Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth(                                                )
-                                                    .padding(vertical = 2.dp),
+                                                modifier = Modifier.fillMaxWidth().padding(vertical = if(isUser) 2.dp else 8.dp),
                                                 horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
                                             ) {
                                                 Box(
                                                     modifier = Modifier
-                                                        .clip(
-                                                            RoundedCornerShape(
-                                                                topStart = 16.dp,
-                                                                topEnd = 16.dp,
-                                                                bottomStart = if (isUser) 16.dp else 0.dp,
-                                                                bottomEnd = if (isUser) 0.dp else 16.dp
-                                                                                                            )
-                                                                                                        )
-                                                        .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
-                                                        .padding(12.dp                                                )
-                                                        .widthIn(max = 280.dp                                                )
-                                                ) {
-                                                    Column {
-                                                        Row(
-                                                            verticalAlignment = Alignment.CenterVertically,
-                                                            horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
-                                                        ) {
-                                                            Text(
-                                                                text = if (isUser) "You" else "Lumio",
-                                                                fontSize = 10.sp,
-                                                                fontWeight = FontWeight.Bold,
-                                                                color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary
-                                                                                                            )
-                                                            if (!isUser) {
-                                                                Box(
-                                                                    modifier = Modifier
-                                                                        .clip(RoundedCornerShape(4.dp)                                                )
-                                                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)                                                )
-                                                                        .padding(horizontal = 4.dp, vertical = 1.dp                                                )
-                                                                ) {
-                                                                    Text(
-                                                                        text = msg.emotionTag,
-                                                                        color = MaterialTheme.colorScheme.primary,
-                                                                        fontSize = 8.sp,
-                                                                        fontWeight = FontWeight.Bold
-                                                                                                                    )
-
-                                                                }
+                                                        .let {
+                                                            if (isUser) {
+                                                                it.clip(RoundedCornerShape(
+                                                                    topStart = 16.dp,
+                                                                    topEnd = 16.dp,
+                                                                    bottomStart = 16.dp,
+                                                                    bottomEnd = 4.dp
+                                                                )).background(MaterialTheme.colorScheme.primaryContainer)
+                                                            } else {
+                                                                it.background(Color.Transparent)
                                                             }
                                                         }
-                                                        Spacer(modifier = Modifier.height(4.dp)                                                )
-                                                        if (cleanText.isNotEmpty()) {
-                                                            Text(
-                                                                text = cleanText,
-                                                                fontSize = 14.sp,
-                                                                color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                                                lineHeight = 18.sp
-                                                                                                            )
-                                                        }
-                                                        if (attachmentInfo != null) {
-                                                            val parts = attachmentInfo.split(" ("                                                )
-                                                            val fileName = parts.firstOrNull() ?: "Attachment"
-                                                            val fileType = parts.getOrNull(1)?.removeSuffix(")") ?: ""
-                                                            val isImage = fileType.startsWith("image/"                                                )
-
-                                                            Spacer(modifier = Modifier.height(6.dp)                                                )
-                                                            Row(
-                                                                modifier = Modifier
-                                                                    .fillMaxWidth(                                                )
-                                                                    .clip(RoundedCornerShape(8.dp)                                                )
-                                                                    .background(if (isUser) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.15f) else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)                                                )
-                                                                    .padding(8.dp),
-                                                                verticalAlignment = Alignment.CenterVertically,
-                                                                horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
-                                                            ) {
-                                                                Icon(
-                                                                    imageVector = if (isImage) Icons.Rounded.Image else Icons.Rounded.AttachFile,
-                                                                    contentDescription = null,
-                                                                    tint = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary,
-                                                                    modifier = Modifier.size(20.dp                                                )
-                                                                                                                )
-                                                                Column(modifier = Modifier.weight(1f)) {
+                                                        .padding(if(isUser) 12.dp else 4.dp)
+                                                        .widthIn(max = if(isUser) 280.dp else 340.dp)
+                                                ) {
+                                                    Column {
+                                                        if (!isUser) {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Text(
+                                                                    text = "Lumio",
+                                                                    fontSize = 12.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = MaterialTheme.colorScheme.primary
+                                                                )
+                                                                if (msg.emotionTag != "NORMAL") {
+                                                                    Spacer(modifier = Modifier.width(6.dp))
                                                                     Text(
-                                                                        text = fileName,
-                                                                        fontSize = 11.sp,
-                                                                        fontWeight = FontWeight.Bold,
-                                                                        color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                                                        maxLines = 1,
-                                                                        overflow = TextOverflow.Ellipsis
-                                                                                                                    )
-                                                                    Text(
-                                                                        text = fileType.uppercase(),
-                                                                        fontSize = 9.sp,
-                                                                        color = (if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant).copy(alpha = 0.7f                                                )
-                                                                                                                    )
+                                                                        text = msg.emotionTag,
+                                                                        fontSize = 10.sp,
+                                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                                    )
                                                                 }
+                                                            }
+                                                            Spacer(modifier = Modifier.height(4.dp))
+                                                        }
+                                                        com.example.ui.MessageContent(text = cleanText, isUser = isUser)
+                                                        if (attachmentInfo != null) {
+                                                            Spacer(modifier = Modifier.height(8.dp))
+                                                            Row(
+                                                                verticalAlignment = Alignment.CenterVertically,
+                                                                modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(Color.Black.copy(alpha = 0.1f)).padding(8.dp)
+                                                            ) {
+                                                                Icon(Icons.Rounded.AttachFile, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(
+                                                                    text = attachmentInfo,
+                                                                    fontSize = 10.sp,
+                                                                    color = MaterialTheme.colorScheme.primary
+                                                                )
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
-                                        }
-                                        }
-                                        // Generating/thinking loader item
-                                        if (isGenerating) {
-                                            item {
-                                                ThinkingIndicatorItem(                                                )
                                             }
                                         }
+
+                                        if (streamingMessage != null) {
+                                            item {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                                    horizontalArrangement = Arrangement.Start
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 0.dp, bottomEnd = 16.dp))
+                                                            .background(Color.Transparent)
+                                                            .padding(4.dp)
+                                                            .widthIn(max = 340.dp)
+                                                    ) {
+                                                        Column {
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Text(
+                                                                    text = "Lumio",
+                                                                    fontSize = 12.sp,
+                                                                    fontWeight = FontWeight.Bold,
+                                                                    color = MaterialTheme.colorScheme.primary
+                                                                )
+                                                                if (streamingEmotion != "NORMAL") {
+                                                                    Spacer(modifier = Modifier.width(6.dp))
+                                                                    Text(
+                                                                        text = streamingEmotion,
+                                                                        fontSize = 10.sp,
+                                                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                                                    )
+                                                                }
+                                                            }
+                                                            Spacer(modifier = Modifier.height(4.dp))
+                                                            if (streamingMessage!!.isEmpty()) {
+                                                                ThinkingIndicatorItem()
+                                                            } else {
+                                                                com.example.ui.MessageContent(text = streamingMessage!!, isUser = false)
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } else if (isGenerating) {
+                                            item {
+                                                ThinkingIndicatorItem()
+                                            }
+                                        }
+
                                     }
                                 }
                             }
@@ -1027,7 +1049,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 visible = showSettings,
                 enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
                 exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
-                modifier = Modifier.align(Alignment.BottomCenter                                                )
+                modifier = Modifier
             ) {
             Box(
                 modifier = Modifier
@@ -1247,30 +1269,6 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Hugging Face API Key",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        )
-                        OutlinedTextField(
-                            value = hfApiKey,
-                            onValueChange = { viewModel.saveHfApiKey(it) },
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                            placeholder = { Text("hf_...", fontSize = 13.sp) },
-                            visualTransformation = if (isApiKeyVisible) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                            trailingIcon = {
-                                IconButton(onClick = { isApiKeyVisible = !isApiKeyVisible }) {
-                                    Icon(
-                                        imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = null
-                                    )
-                                }
-                            }
-                        )
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                         Icon(
                                             imageVector = Icons.Rounded.Brush,
@@ -1330,6 +1328,30 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Hugging Face API Key",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        OutlinedTextField(
+                            value = hfApiKey,
+                            onValueChange = { viewModel.saveHfApiKey(it) },
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            placeholder = { Text("hf_...", fontSize = 13.sp) },
+                            visualTransformation = if (isApiKeyVisible) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { isApiKeyVisible = !isApiKeyVisible }) {
+                                    Icon(
+                                        imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        )
 
                         // OpenRouter Key Row       // OpenRouter Key Row
                         Text(
@@ -1571,6 +1593,19 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Download Local Models (GGUF)", fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = { showPiperVoices = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Download Offline Voices (Piper)", fontWeight = FontWeight.Bold)
                         }
 
                         Spacer(modifier = Modifier.height(20.dp)                                                )
@@ -2356,12 +2391,99 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 }
             }
         } // closes AnimatedVisibility for showSettings
+
+        // --- CALL OVERLAY ---
+        AnimatedVisibility(
+            visible = callState == CallState.ACTIVE,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.85f))
+                    .clickable(enabled = true, onClick = {}), // intercept touches
+                contentAlignment = Alignment.Center
+            ) {
+                val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+                val offset by infiniteTransition.animateFloat(
+                    initialValue = -20f,
+                    targetValue = 20f,
+                    animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                        animation = androidx.compose.animation.core.tween(1000, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                        repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+                    ),
+                    label = "bounce"
+                )
+                val rotation by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                        animation = androidx.compose.animation.core.tween(3000, easing = androidx.compose.animation.core.LinearEasing),
+                        repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+                    ),
+                    label = "rotate"
+                )
+                
+                val rgbBrush = androidx.compose.ui.graphics.Brush.sweepGradient(
+                    colors = listOf(
+                        Color(0xFFFF0000), 
+                        Color(0xFF00FF00), 
+                        Color(0xFF0000FF), 
+                        Color(0xFFFF0000)
+                    )
+                )
+                
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .offset(y = offset.dp)
+                            .size(150.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.1f))
+                            .border(width = 8.dp, brush = rgbBrush, shape = CircleShape)
+                            .clickable {
+                                // interrupt and talk
+                                viewModel.startListening()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // inner rotating gradient
+                        Box(modifier = Modifier.fillMaxSize().rotate(rotation).background(rgbBrush).clip(CircleShape).alpha(0.3f))
+                        Icon(
+                            imageVector = Icons.Rounded.Mic,
+                            contentDescription = "Talk",
+                            tint = Color.White,
+                            modifier = Modifier.size(64.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(48.dp))
+                    Text(
+                        text = "Tap circle to talk",
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.height(100.dp))
+                    IconButton(
+                        onClick = { viewModel.endCall() },
+                        modifier = Modifier
+                            .size(72.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "End Call", tint = Color.White, modifier = Modifier.size(36.dp))
+                    }
+                }
+            }
+        }
         
         AnimatedVisibility(
             visible = showLocalModels,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier = Modifier
         ) {
             Box(
                 modifier = Modifier
@@ -2379,6 +2501,24 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 )
             }
         }
+        AnimatedVisibility(
+            visible = showPiperVoices,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable(enabled = false) {}
+            ) {
+                com.example.ui.PiperVoiceScreen(
+                    onBack = { showPiperVoices = false }
+                )
+            }
+        }
+
     }
 }
 } // closes Scaffold
@@ -2604,88 +2744,56 @@ fun MessageItem(msg: CallMessageEntity) {
     AnimatedVisibility(
         visible = isVisible,
         enter = fadeIn(animationSpec = tween(350)) + slideInVertically(initialOffsetY = { 20 }, animationSpec = tween(350)),
-        modifier = Modifier.fillMaxWidth(                                                )
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = if(isUser) 2.dp else 8.dp),
             horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
         ) {
             Box(
                 modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 12.dp,
-                            topEnd = 12.dp,
-                            bottomStart = if (isUser) 12.dp else 0.dp,
-                            bottomEnd = if (isUser) 0.dp else 12.dp
-                                                                        )
-                                                                    )
-                    .background(if (isUser) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
-                    .padding(8.dp                                                )
-                    .widthIn(max = 240.dp                                                )
+                    .let {
+                        if (isUser) {
+                            it.clip(RoundedCornerShape(
+                                topStart = 16.dp,
+                                topEnd = 16.dp,
+                                bottomStart = 16.dp,
+                                bottomEnd = 4.dp
+                            )).background(MaterialTheme.colorScheme.primaryContainer)
+                        } else {
+                            it.background(Color.Transparent)
+                        }
+                    }
+                    .padding(if(isUser) 12.dp else 4.dp)
+                    .widthIn(max = if(isUser) 280.dp else 340.dp)
             ) {
                 Column {
-                    Text(
-                        text = if (isUser) "You" else "Lumio (${msg.emotionTag})",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                                                                    )
-                    Spacer(modifier = Modifier.height(2.dp)                                                )
-                    Text(
-                        text = msg.text,
-                        fontSize = 12.sp,
-                        color = if (isUser) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                                                                    )
+                    if (!isUser) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Lumio",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            if (msg.emotionTag != "NORMAL") {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = msg.emotionTag,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    com.example.ui.MessageContent(text = msg.text, isUser = isUser)
                 }
             }
         }
     }
 }
 
-@Composable
-fun ThinkingIndicatorItem() {
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-    AnimatedVisibility(
-        visible = isVisible,
-        enter = fadeIn(animationSpec = tween(350)) + slideInVertically(initialOffsetY = { 20 }, animationSpec = tween(350)),
-        modifier = Modifier.fillMaxWidth(                                                )
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 12.dp,
-                            topEnd = 12.dp,
-                            bottomStart = 0.dp,
-                            bottomEnd = 12.dp
-                                                                        )
-                                                                    )
-                    .background(MaterialTheme.colorScheme.surfaceVariant                                                )
-                    .padding(8.dp                                                )
-                    .widthIn(max = 240.dp                                                )
-            ) {
-                Column {
-                    Text(
-                        text = "Lumio (thinking...)",
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                                    )
-                    Spacer(modifier = Modifier.height(6.dp)                                                )
-                    ThreeJumpingDots(                                                )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun DevilFaceSvgAnimation(
@@ -3049,3 +3157,14 @@ fun EmotionalPresetSelector(
     }
 }
 
+
+@Composable
+fun ThinkingIndicatorItem() {
+    Row(
+        modifier = Modifier.padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Thinking...", fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}

@@ -1,9 +1,12 @@
 package com.example.ui
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,6 +43,13 @@ fun LocalModelScreen(
 
     var selectedModel by remember { mutableStateOf<String?>(null) }
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let { viewModel.importModelFromUri(context, it) }
+        }
+    )
 
     LaunchedEffect(Unit) {
         if (searchResults.isEmpty()) {
@@ -88,21 +98,39 @@ fun LocalModelScreen(
             
             Spacer(modifier = Modifier.height(16.dp))
             
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Column {
+                    val totalRam = viewModel.getTotalRAM(context)
+                    val freeRam = viewModel.getFreeRAM(context)
+                    Text("RAM: ${freeRam}MB Free / ${totalRam}MB Total", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                OutlinedButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                    Text("Import GGUF", fontSize = 12.sp)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            
             if (isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
 
+            val glassColors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
+            val glassBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+
             if (selectedModel == null) {
-                val dir = java.io.File(context.filesDir, "models")
+                val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                 val downloadedFiles = dir.listFiles()?.filter { it.name.endsWith(".gguf") } ?: emptyList()
                 if (downloadedFiles.isNotEmpty()) {
-                    Text("Downloaded Models", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Downloaded Models (Downloads folder)", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
                     LazyColumn(modifier = Modifier.weight(if (searchResults.isEmpty()) 1f else 0.5f)) {
                         items(downloadedFiles) { file ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(vertical = 4.dp)
+                                    .padding(vertical = 4.dp),
+                                colors = glassColors,
+                                border = glassBorder,
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Row(
                                     modifier = Modifier.padding(16.dp),
@@ -136,7 +164,10 @@ fun LocalModelScreen(
                                     .clickable { 
                                         selectedModel = model.id
                                         viewModel.loadModelFiles(model.id, hfApiKey)
-                                    }
+                                    },
+                                colors = glassColors,
+                                border = glassBorder,
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(text = model.id, fontWeight = FontWeight.Bold)
@@ -171,7 +202,10 @@ fun LocalModelScreen(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp)
+                                .padding(vertical = 4.dp),
+                            colors = glassColors,
+                            border = glassBorder,
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Row(
                                 modifier = Modifier.padding(16.dp),
@@ -187,7 +221,7 @@ fun LocalModelScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(onClick = {
-                                    val dir = java.io.File(context.filesDir, "models")
+                                    val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
                                     val outputFile = java.io.File(dir, file.path.substringAfterLast("/"))
                                     if (!outputFile.exists()) {
                                         Toast.makeText(context, "Please download the model first", Toast.LENGTH_SHORT).show()

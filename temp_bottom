@@ -1,0 +1,107 @@
+
+    // Android SpeechRecognizer setup and controls
+    private fun setupSpeechRecognizer() {
+        if (SpeechRecognizer.isRecognitionAvailable(getApplication())) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(getApplication()).apply {
+                setRecognitionListener(object : RecognitionListener {
+                    override fun onReadyForSpeech(params: Bundle?) {
+                        _isListening.value = true
+                        _speechTranscript.value = "Listening..."
+                    }
+
+                    override fun onBeginningOfSpeech() {
+                        _speechTranscript.value = "Transcribing..."
+                    }
+
+                    override fun onRmsChanged(rmsdB: Float) {
+                        // Can be used for dynamic waves in UI if desired
+                    }
+
+                    override fun onBufferReceived(buffer: ByteArray?) {}
+
+                    override fun onEndOfSpeech() {
+                        _isListening.value = false
+                    }
+
+                    override fun onError(error: Int) {
+                        _isListening.value = false
+                        val errorMessage = when (error) {
+                            SpeechRecognizer.ERROR_AUDIO -> "Audio recording error"
+                            SpeechRecognizer.ERROR_CLIENT -> "Client side error"
+                            SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Insufficient permissions"
+                            SpeechRecognizer.ERROR_NETWORK -> "Network error"
+                            SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Network timeout"
+                            SpeechRecognizer.ERROR_NO_MATCH -> "No speech matched"
+                            SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Speech recognizer busy"
+                            SpeechRecognizer.ERROR_SERVER -> "Server error"
+                            SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Speech timeout"
+                            else -> "Speech recognition failed"
+                        }
+                        _speechTranscript.value = ""
+                        Log.e("CallViewModel", "Speech recognition error: $errorMessage")
+                        checkAndAutoRestartListening()
+                    }
+
+                    override fun onResults(results: Bundle?) {
+                        val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        val text = matches?.firstOrNull() ?: ""
+                        _speechTranscript.value = text
+                        if (text.trim().isNotEmpty()) {
+                            sendUserMessage(text)
+                        } else {
+                            checkAndAutoRestartListening()
+                        }
+                    }
+
+                    override fun onPartialResults(partialResults: Bundle?) {
+                        val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                        val text = matches?.firstOrNull() ?: ""
+                        if (text.isNotEmpty()) {
+                            _speechTranscript.value = text
+                        }
+                    }
+
+                    override fun onEvent(eventType: Int, params: Bundle?) {}
+                })
+            }
+        }
+    }
+
+    fun startListening() {
+        if (_isMuted.value) return
+        stopTTS() // Stop talking if user wants to speak
+        val langCode = _selectedLanguage.value
+        val locale = when (langCode) {
+            "hi" -> Locale("hi", "IN")
+            "en" -> Locale.US
+            "es" -> Locale("es", "ES")
+            "fr" -> Locale.FRANCE
+            "de" -> Locale.GERMANY
+            else -> Locale("hi", "IN")
+        }
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale.toString())
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, locale.toString())
+            putExtra(RecognizerIntent.EXTRA_ONLY_RETURN_LANGUAGE_PREFERENCE, locale.toString())
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        }
+        try {
+            speechRecognizer?.startListening(intent)
+        } catch (e: Throwable) {
+            Log.e("CallViewModel", "Failed to start listening", e)
+        }
+    }
+
+    fun stopListening() {
+        speechRecognizer?.stopListening()
+        _isListening.value = false
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        textToSpeech?.shutdown()
+        piperEngine?.release()
+        speechRecognizer?.destroy()
+    }
+}
