@@ -1003,7 +1003,10 @@ Do not forget the tone tag!
     // OpenRouter API call
     fun sendUserMessage(text: String) {
         if (text.trim().isEmpty()) return
-        if (_apiKey.value.trim().isEmpty()) {
+        
+        val isLocalModel = _selectedModel.value.endsWith(".gguf")
+        
+        if (!isLocalModel && _apiKey.value.trim().isEmpty()) {
             _error.value = "OpenRouter API Key is missing. Check Settings!"
             return
         }

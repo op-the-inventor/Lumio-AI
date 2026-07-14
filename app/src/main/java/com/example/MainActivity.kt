@@ -179,6 +179,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
 
     // Screen navigation overlays
     var showSettings by remember { mutableStateOf(false) }
+    var showLocalModels by remember { mutableStateOf(false) }
     var isSidebarOpen by remember { mutableStateOf(false) }
     var userTypedInput by remember { mutableStateOf("") }
     var isApiKeyVisible by remember { mutableStateOf(false) }
@@ -666,12 +667,13 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
                                     ) {
-                                        val currentModelName = when (selectedModel) {
-                                            "meta-llama/llama-3.3-70b-instruct:free" -> "Llama 3.3"
-                                            "google/gemini-2.5-flash" -> "Gemini 2.5"
-                                            "mistralai/mistral-7b-instruct:free" -> "Mistral 7B"
-                                            "deepseek/deepseek-chat:free" -> "DeepSeek"
-                                            else -> selectedModel.substringAfter("/").substringBefore(":"                                                )
+                                        val currentModelName = when {
+                                            selectedModel == "meta-llama/llama-3.3-70b-instruct:free" -> "Llama 3.3"
+                                            selectedModel == "google/gemini-2.5-flash" -> "Gemini 2.5"
+                                            selectedModel == "mistralai/mistral-7b-instruct:free" -> "Mistral 7B"
+                                            selectedModel == "deepseek/deepseek-chat:free" -> "DeepSeek"
+                                            selectedModel.endsWith(".gguf") -> selectedModel.substringAfterLast("/")
+                                            else -> selectedModel.substringAfter("/").substringBefore(":")
                                         }
                                         Text(
                                             text = currentModelName,
@@ -1055,32 +1057,59 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Blue Pill "New Chat" button
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(24.dp)                                                )
-                                .background(MaterialTheme.colorScheme.primary                                                )
-                                .clickable {
-                                    viewModel.loadChatSession(java.util.UUID.randomUUID().toString()                                                )
-                                    isSidebarOpen = false
-                                    Toast.makeText(context, "New chat started.", Toast.LENGTH_SHORT).show(                                                )
-                                }
-                                .padding(horizontal = 20.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = "New Chat",
-                                tint = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(16.dp                                                )
-                                                                            )
-                            Text(
-                                text = "New Chat",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimary
-                                                                            )
+                        Row {
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(24.dp)                                                )
+                                    .background(MaterialTheme.colorScheme.primary                                                )
+                                    .clickable {
+                                        viewModel.loadChatSession(java.util.UUID.randomUUID().toString()                                                )
+                                        isSidebarOpen = false
+                                        Toast.makeText(context, "New chat started.", Toast.LENGTH_SHORT).show(                                                )
+                                    }
+                                    .padding(horizontal = 20.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Add,
+                                    contentDescription = "New Chat",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.size(16.dp                                                )
+                                                                                )
+                                Text(
+                                    text = "New Chat",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                                                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(24.dp)                                                )
+                                    .background(MaterialTheme.colorScheme.secondaryContainer                                                )
+                                    .clickable {
+                                        isSidebarOpen = false
+                                        showLocalModels = true
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Download,
+                                    contentDescription = "Local Models",
+                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    modifier = Modifier.size(16.dp                                                )
+                                                                                )
+                                Text(
+                                    text = "Local Models",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                                                )
+                            }
                         }
 
                         // Settings Icon instead of Avatar
@@ -2376,11 +2405,34 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                     }
                 }
             }
+        } // closes AnimatedVisibility for showSettings
+        
+        AnimatedVisibility(
+            visible = showLocalModels,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }),
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .clickable(enabled = false) {}
+            ) {
+                com.example.ui.LocalModelScreen(
+                    onBack = { showLocalModels = false },
+                    onModelSelected = { modelPath ->
+                        viewModel.saveSelectedModel(modelPath)
+                        showLocalModels = false
+                    }
+                )
+            }
         }
     }
 }
-
-}
+} // closes Scaffold
 
 @Composable
 fun WaveformVisualizer(

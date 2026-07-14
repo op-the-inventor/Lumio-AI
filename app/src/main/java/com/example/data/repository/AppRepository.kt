@@ -11,6 +11,10 @@ import com.example.data.database.SettingDao
 import com.example.data.database.SettingEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import de.kherud.llama.LlamaModel
+import de.kherud.llama.ModelParameters
+import de.kherud.llama.InferenceParameters
+import java.io.File
 
 class AppRepository(
     private val settingDao: SettingDao,
@@ -18,6 +22,9 @@ class AppRepository(
     private val chatSessionDao: ChatSessionDao,
     private val openRouterService: OpenRouterService
 ) {
+    private var localModel: LlamaModel? = null
+    private var currentLocalModelPath: String? = null
+
     // Flow of all chat sessions
     val allSessionsFlow: Flow<List<ChatSessionEntity>> = chatSessionDao.getAllSessionsFlow()
 
@@ -108,6 +115,11 @@ class AppRepository(
         // Add current user message
         apiMessages.add(OpenRouterMessage(role = "user", content = userMessage))
 
+        // Check if modelName is a local GGUF file path
+        if (modelName.endsWith(".gguf") && File(modelName).exists()) {
+            return getLocalAICompletion(modelName, apiMessages)
+        }
+
         val request = OpenRouterRequest(
             model = modelName,
             messages = apiMessages
@@ -134,5 +146,56 @@ class AppRepository(
         }
 
         return Pair(cleanText, emotion)
+    }
+
+    private suspend fun getLocalAICompletion(modelPath: String, messages: List<OpenRouterMessage>): Pair<String, String> {
+        return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            if (localModel == null || currentLocalModelPath != modelPath) {
+                try {
+                    // Try to close if already open
+                    val currentModel = localModel
+                    if (currentModel != null) {
+                        try {
+                            val method = currentModel.javaClass.getMethod("close")
+                            method.invoke(currentModel)
+                        } catch(e: Exception) {}
+                    }
+                } catch(e: Exception) {}
+                
+                val params = ModelParameters().setModel(modelPath)
+                localModel = LlamaModel(params)
+                currentLocalModelPath = modelPath
+            }
+
+            // Convert to a simple chat format
+            val promptBuilder = StringBuilder()
+            messages.forEach { msg ->
+                val role = if (msg.role == "system") "System" else if (msg.role == "user") "User" else "Assistant"
+                promptBuilder.append("$role: ${msg.content}\n")
+            }
+            promptBuilder.append("Assistant:")
+            
+            val inferenceParams = InferenceParameters(promptBuilder.toString())
+                .setTemperature(0.7f)
+                .setStopStrings("User:", "System:", "User\n")
+
+            var rawContent = ""
+            for (output in localModel!!.generate(inferenceParams)) {
+                rawContent += output.text
+            }
+
+            // Parse emotion tag
+            var cleanText = rawContent
+            var emotion = "NORMAL"
+
+            val regex = Regex("\\[TONE:\\s*(ANGRY|SAD|EXCITED|NORMAL)\\]", RegexOption.IGNORE_CASE)
+            val matchResult = regex.find(rawContent)
+            if (matchResult != null) {
+                emotion = matchResult.groupValues[1].uppercase()
+                cleanText = rawContent.replace(regex, "").trim()
+            }
+
+            Pair(cleanText.trim(), emotion)
+        }
     }
 }
