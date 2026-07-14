@@ -27,6 +27,7 @@ import android.widget.Toast
 @Composable
 fun PiperVoiceScreen(
     onBack: () -> Unit,
+    onTestVoice: (String) -> Unit = {},
     viewModel: PiperVoiceViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -93,7 +94,8 @@ fun PiperVoiceScreen(
                     VoiceCard(
                         voice = voice,
                         onDownload = { viewModel.downloadVoice(context, voice) },
-                        onDelete = { viewModel.deleteVoice(context, voice) }
+                        onDelete = { viewModel.deleteVoice(context, voice) },
+                        onTest = { onTestVoice(voice.info.key) }
                     )
                 }
             }
@@ -105,7 +107,8 @@ fun PiperVoiceScreen(
 fun VoiceCard(
     voice: EnhancedVoiceInfo,
     onDownload: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onTest: () -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -143,6 +146,9 @@ fun VoiceCard(
             }
             
             if (voice.isInstalled) {
+                OutlinedButton(onClick = onTest, modifier = Modifier.padding(end = 8.dp), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)) {
+                    Text("Test", fontSize = 12.sp)
+                }
                 IconButton(onClick = onDelete) {
                     Icon(Icons.Rounded.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
                 }

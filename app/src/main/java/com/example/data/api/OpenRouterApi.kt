@@ -20,7 +20,8 @@ data class OpenRouterMessage(
 @JsonClass(generateAdapter = true)
 data class OpenRouterRequest(
     @Json(name = "model") val model: String,
-    @Json(name = "messages") val messages: List<OpenRouterMessage>
+    @Json(name = "messages") val messages: List<OpenRouterMessage>,
+    @Json(name = "stream") val stream: Boolean = false
 )
 
 @JsonClass(generateAdapter = true)

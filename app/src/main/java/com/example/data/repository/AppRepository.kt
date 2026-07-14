@@ -171,6 +171,9 @@ class AppRepository(
                     }
                 } catch(e: Exception) {}
                 
+                                if (!File(modelPath).exists()) {
+                    throw Exception("Local model file not found: $modelPath")
+                }
                 val params = ModelParameters().setModel(modelPath)
                 localModel = LlamaModel(params)
                 currentLocalModelPath = modelPath
@@ -230,15 +233,15 @@ class AppRepository(
         }
         apiMessages.add(OpenRouterMessage(role = "user", content = userMessage))
         
-        val requestBodyMap = mapOf(
-            "model" to modelName,
-            "messages" to apiMessages.map { mapOf("role" to it.role, "content" to it.content) },
-            "stream" to true
+        val requestObj = OpenRouterRequest(
+            model = modelName,
+            messages = apiMessages,
+            stream = true
         )
         
         val moshi = com.squareup.moshi.Moshi.Builder().build()
-        val adapter = moshi.adapter(Map::class.java)
-        val jsonBody = adapter.toJson(requestBodyMap)
+        val adapter = moshi.adapter(OpenRouterRequest::class.java)
+        val jsonBody = adapter.toJson(requestObj)
         
         val okHttpClient = okhttp3.OkHttpClient.Builder()
             .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
@@ -265,12 +268,14 @@ class AppRepository(
                     if (line.startsWith("data: ") && line != "data: [DONE]") {
                         val data = line.substring(6)
                         try {
-                            val chunk = moshi.adapter(Map::class.java).fromJson(data)
-                            val choices = chunk?.get("choices") as? List<Map<String, Any>>
-                            val delta = choices?.firstOrNull()?.get("delta") as? Map<String, Any>
-                            val content = delta?.get("content") as? String
-                            if (content != null) {
-                                emit(content)
+                            val json = org.json.JSONObject(data)
+                            val choices = json.optJSONArray("choices")
+                            if (choices != null && choices.length() > 0) {
+                                val delta = choices.optJSONObject(0)?.optJSONObject("delta")
+                                val content = delta?.optString("content", null)
+                                if (content != null && content != "null" && content.isNotEmpty()) {
+                                    emit(content)
+                                }
                             }
                         } catch (e: Exception) {
                             // parse error

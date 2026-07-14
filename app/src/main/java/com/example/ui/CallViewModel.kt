@@ -87,8 +87,15 @@ class CallViewModel(application: Application) : AndroidViewModel(application), T
     val hfApiKey: StateFlow<String> = _hfApiKey.asStateFlow()
 
 
-    private val _selectedModel = MutableStateFlow("meta-llama/llama-3.3-70b-instruct:free")
-    val selectedModel: StateFlow<String> = _selectedModel.asStateFlow()
+    private val _cloudModel = MutableStateFlow("meta-llama/llama-3.3-70b-instruct:free")
+    val cloudModel: StateFlow<String> = _cloudModel.asStateFlow()
+
+    private val _localModel = MutableStateFlow("")
+    val localModel: StateFlow<String> = _localModel.asStateFlow()
+
+    private val _useLocalModel = MutableStateFlow(false)
+    val useLocalModel: StateFlow<Boolean> = _useLocalModel.asStateFlow()
+
 
     private val _apiKeyTestState = MutableStateFlow<ApiKeyTestState>(ApiKeyTestState.IDLE)
     val apiKeyTestState: StateFlow<ApiKeyTestState> = _apiKeyTestState.asStateFlow()
@@ -308,7 +315,9 @@ Do not forget the tone tag!
                 _userEmail.value = settings["user_email"] ?: ""
                 _userName.value = settings["user_name"] ?: ""
                 _isLoggedIn.value = settings["is_logged_in"]?.toBoolean() ?: false
-                _selectedModel.value = settings["selected_model"] ?: "meta-llama/llama-3.3-70b-instruct:free"
+                _cloudModel.value = settings["cloud_model"] ?: "meta-llama/llama-3.3-70b-instruct:free"
+                _localModel.value = settings["local_model"] ?: ""
+                _useLocalModel.value = settings["use_local_model"]?.toBoolean() ?: false
                 _isSpeakerOn.value = settings["speaker_on"]?.toBoolean() ?: true
                 _selectedLanguage.value = settings["selected_language"] ?: "hi"
                 _selectedPresetVoiceId.value = settings["selected_preset_voice_id"] ?: "ankit"
@@ -425,10 +434,24 @@ Do not forget the tone tag!
         }
     }
 
-    fun saveSelectedModel(model: String) {
+    fun saveCloudModel(model: String) {
         viewModelScope.launch {
-            repository.saveSetting("selected_model", model)
-            _selectedModel.value = model
+            repository.saveSetting("cloud_model", model)
+            _cloudModel.value = model
+        }
+    }
+
+    fun saveLocalModel(model: String) {
+        viewModelScope.launch {
+            repository.saveSetting("local_model", model)
+            _localModel.value = model
+        }
+    }
+
+    fun setUseLocalModel(useLocal: Boolean) {
+        viewModelScope.launch {
+            repository.saveSetting("use_local_model", useLocal.toString())
+            _useLocalModel.value = useLocal
         }
     }
 
@@ -712,7 +735,18 @@ Do not forget the tone tag!
 
     fun testApiKey() {
         val currentKey = _apiKey.value.trim()
-        val currentModel = _selectedModel.value
+        val isLocalModel = _useLocalModel.value
+        
+        if (isLocalModel) {
+            val file = java.io.File(_localModel.value)
+            if (file.exists()) {
+                _apiKeyTestState.value = ApiKeyTestState.SUCCESS("Local model found and ready. No API key needed.")
+            } else {
+                _apiKeyTestState.value = ApiKeyTestState.ERROR("Local model file not found.")
+            }
+            return
+        }
+
         if (currentKey.isEmpty()) {
             _apiKeyTestState.value = ApiKeyTestState.ERROR("Please enter a key first.")
             return
@@ -723,7 +757,7 @@ Do not forget the tone tag!
             try {
                 val result = repository.getAICompletion(
                     apiKey = currentKey,
-                    modelName = currentModel,
+                    modelName = (_cloudModel.value),
                     userMessage = "Ping test, reply with exactly the word: SUCCESS",
                     history = emptyList(),
                     systemPrompt = "You are a basic test connection responder. Say exactly: SUCCESS"
@@ -1122,7 +1156,7 @@ Do not forget the tone tag!
     fun sendUserMessage(text: String) {
         if (text.trim().isEmpty()) return
         
-        val isLocalModel = _selectedModel.value.endsWith(".gguf")
+        val isLocalModel = _useLocalModel.value
         
         if (!isLocalModel && _apiKey.value.trim().isEmpty()) {
             _error.value = "OpenRouter API Key is missing. Check Settings!"
@@ -1145,7 +1179,7 @@ Do not forget the tone tag!
             // Wait brief moment and fetch response
             try {
                 val apiKey = _apiKey.value.trim()
-                val model = _selectedModel.value
+                val model = if (_useLocalModel.value) _localModel.value else _cloudModel.value
                 val history = _messages.value
 
                 // Call remote API
@@ -1183,6 +1217,9 @@ Do not forget the tone tag!
                     val responseText = StringBuilder()
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         try {
+                            if (!java.io.File(model).exists()) {
+                                throw Exception("Local model file not found: $model")
+                            }
                             _isLocalModelLoading.value = true
                             val params = de.kherud.llama.ModelParameters().setModel(model)
                             de.kherud.llama.LlamaModel(params).use { llamaModel ->
@@ -1246,6 +1283,9 @@ Do not forget the tone tag!
                             if (isLocalModel) {
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                     try {
+                                        if (!java.io.File(model).exists()) {
+                                            throw Exception("Local model file not found: $model")
+                                        }
                                         _isLocalModelLoading.value = true
                                         val params = de.kherud.llama.ModelParameters().setModel(model)
                                         de.kherud.llama.LlamaModel(params).use { llamaModel ->
@@ -1285,6 +1325,23 @@ Do not forget the tone tag!
                 speakAIResponse("I am sorry, but the call was disconnected due to a connection issue.", "NORMAL")
             } finally {
                 _isGenerating.value = false
+            }
+        }
+    }
+
+    fun testPiperVoice(voiceId: String) {
+        viewModelScope.launch {
+            try {
+                val piperDir = java.io.File(getApplication<Application>().filesDir, "piper/models")
+                val modelFile = java.io.File(piperDir, "${voiceId}.onnx")
+                if (modelFile.exists()) {
+                    piperEngine?.initialize(modelFile.absolutePath)
+                    piperEngine?.speak("This is a test of the Piper voice engine. Everything is working perfectly.")
+                } else {
+                    _error.value = "Voice model not installed."
+                }
+            } catch (e: Exception) {
+                _error.value = "Test failed: ${e.message}"
             }
         }
     }

@@ -171,9 +171,12 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     val darkTheme by viewModel.darkTheme.collectAsState(                                                )
     val apiKey by viewModel.apiKey.collectAsState()
     val hfApiKey by viewModel.hfApiKey.collectAsState()
-    val selectedModel by viewModel.selectedModel.collectAsState(                                                )
+    
     val callState by viewModel.callState.collectAsState(                                                )
     val isMuted by viewModel.isMuted.collectAsState(                                                )
+    val cloudModel by viewModel.cloudModel.collectAsState()
+    val localModel by viewModel.localModel.collectAsState()
+    val useLocalModel by viewModel.useLocalModel.collectAsState()
     val isSpeakerOn by viewModel.isSpeakerOn.collectAsState(                                                )
     val currentAIEmotion by viewModel.currentAIEmotion.collectAsState(                                                )
     val isTTSPlaying by viewModel.isTTSPlaying.collectAsState(                                                )
@@ -1528,40 +1531,90 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
 
                         // Model selection
                         Text(
-                            text = "OpenRouter Model ID",
+                            text = "Model Settings",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(bottom = 6.dp                                                )
-                                                                        )
-
-                        // Editable Model ID Text Field
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(                                                )
-                                .clip(RoundedCornerShape(12.dp)                                                )
-                                .background(MaterialTheme.colorScheme.surfaceVariant                                                )
-                                .padding(horizontal = 12.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.Android, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)                                                )
-                            TextField(
-                                value = selectedModel,
-                                onValueChange = { viewModel.saveSelectedModel(it) },
-                                placeholder = { Text("e.g. meta-llama/llama-3.3-70b-instruct:free", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
-                                colors = TextFieldDefaults.colors(
-                                    focusedContainerColor = Color.Transparent,
-                                    unfocusedContainerColor = Color.Transparent,
-                                    disabledContainerColor = Color.Transparent,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent,
-                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
-                                ),
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        
+                        // Cloud Model Selection
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { viewModel.setUseLocalModel(false) }) {
+                            androidx.compose.material3.RadioButton(
+                                selected = !useLocalModel,
+                                onClick = { viewModel.setUseLocalModel(false) }
+                            )
+                            Text("OpenRouter Model ID", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        }
+                        
+                        if (!useLocalModel) {
+                            Row(
                                 modifier = Modifier
-                                    .weight(1f                                                )
-                                    .testTag("model_id_input"                                                )
-                                                                            )
+                                    .fillMaxWidth()
+                                    .padding(start = 32.dp, bottom = 8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.Cloud, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                                TextField(
+                                    value = cloudModel,
+                                    onValueChange = { viewModel.saveCloudModel(it) },
+                                    placeholder = { Text("e.g. meta-llama/llama-3.3-70b-instruct:free", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
+                                    ),
+                                    modifier = Modifier.weight(1f).testTag("cloud_model_id_input")
+                                )
+                            }
+                        }
+
+                        // Local Model Selection
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { viewModel.setUseLocalModel(true) }) {
+                            androidx.compose.material3.RadioButton(
+                                selected = useLocalModel,
+                                onClick = { viewModel.setUseLocalModel(true) }
+                            )
+                            Text("Local Model Path (.gguf)", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                        }
+                        
+                        if (useLocalModel) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 32.dp, bottom = 8.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.PhoneAndroid, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                                TextField(
+                                    value = localModel,
+                                    onValueChange = { viewModel.saveLocalModel(it) },
+                                    placeholder = { Text("e.g. /storage/.../model.gguf", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.Transparent,
+                                        unfocusedContainerColor = Color.Transparent,
+                                        disabledContainerColor = Color.Transparent,
+                                        focusedIndicatorColor = Color.Transparent,
+                                        unfocusedIndicatorColor = Color.Transparent,
+                                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground
+                                    ),
+                                    modifier = Modifier.weight(1f).testTag("local_model_id_input")
+                                )
+                                IconButton(onClick = { showLocalModels = true }) {
+                                    Icon(Icons.Default.Folder, contentDescription = "Browse Local Models", tint = MaterialTheme.colorScheme.primary)
+                                }
+                            }
                         }
 
                         // Test Model
@@ -1596,11 +1649,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     testModelResult = null
                                     coroutineScope.launch {
                                         try {
-                                            val isLocal = selectedModel.endsWith(".gguf")
+                                            val isLocal = useLocalModel
                                             if (isLocal) {
                                                 var localRes = ""
                                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                                    val params = de.kherud.llama.ModelParameters().setModel(selectedModel)
+                                                    if (localModel.isBlank() || !java.io.File(localModel).exists()) {
+                                                        throw Exception("Local model file not found: $localModel")
+                                                    }
+                                                    val params = de.kherud.llama.ModelParameters().setModel(localModel)
                                                     de.kherud.llama.LlamaModel(params).use { llamaModel ->
                                                         val prompt = "<|im_start|>user\n$testModelInput<|im_end|>\n<|im_start|>assistant\n"
                                                         val inferParams = de.kherud.llama.InferenceParameters(prompt)
@@ -1615,7 +1671,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                                     val db = com.example.data.database.AppDatabase.getDatabase(context)
                                                     val repo = com.example.data.repository.AppRepository(db.settingDao(), db.callMessageDao(), db.chatSessionDao(), com.example.data.api.OpenRouterService.create())
-                                                    res = repo.getAICompletion(apiKey, selectedModel, testModelInput, emptyList(), "You are a test assistant.").first
+                                                    res = repo.getAICompletion(apiKey, cloudModel, testModelInput, emptyList(), "You are a test assistant.").first
                                                 }
                                                 testModelResult = res
                                             }
@@ -1666,13 +1722,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             modifier = Modifier.testTag("model_select_dropdown"                                                )
                         ) {
                             modelsList.forEach { (modelId, displayName) ->
-                                val isSelected = selectedModel == modelId
+                                val isSelected = cloudModel == modelId
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth(                                                )
                                         .clip(RoundedCornerShape(12.dp)                                                )
                                         .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant                                                )
-                                        .clickable { viewModel.saveSelectedModel(modelId) }
+                                        .clickable { viewModel.saveCloudModel(modelId)
+                                                viewModel.setUseLocalModel(false) }
                                         .padding(14.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
@@ -1699,7 +1756,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
 
                                     RadioButton(
                                         selected = isSelected,
-                                        onClick = { viewModel.saveSelectedModel(modelId) },
+                                        onClick = { viewModel.saveCloudModel(modelId)
+                                                viewModel.setUseLocalModel(false) },
                                         colors = RadioButtonDefaults.colors(
                                             selectedColor = MaterialTheme.colorScheme.primary,
                                             unselectedColor = MaterialTheme.colorScheme.outline
@@ -2621,7 +2679,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                 com.example.ui.LocalModelScreen(
                     onBack = { showLocalModels = false },
                     onModelSelected = { modelPath ->
-                        viewModel.saveSelectedModel(modelPath)
+                        viewModel.saveLocalModel(modelPath)
+                        viewModel.setUseLocalModel(true)
                         showLocalModels = false
                     },
                     hfApiKey = hfApiKey
@@ -2641,7 +2700,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                     .clickable(enabled = false) {}
             ) {
                 com.example.ui.PiperVoiceScreen(
-                    onBack = { showPiperVoices = false }
+                    onBack = { showPiperVoices = false },
+                    onTestVoice = { voiceId -> viewModel.testPiperVoice(voiceId) }
                 )
             }
         }
