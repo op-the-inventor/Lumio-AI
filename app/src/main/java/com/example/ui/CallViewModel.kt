@@ -1015,6 +1015,12 @@ Do not forget the tone tag!
             _error.value = null
             _isGenerating.value = true
             val currentChat = _currentChatId.value
+            
+            val isFirstMessage = _messages.value.isEmpty()
+            if (isFirstMessage && currentChat != "default") {
+                repository.createChatSession(currentChat, "New Chat")
+            }
+
             // Add user message to local database (Room)
             repository.addMessage(currentChat, "user", text, "NORMAL")
 
@@ -1052,6 +1058,24 @@ Do not forget the tone tag!
 
                 // Call TextToSpeech with parsed emotion
                 speakAIResponse(aiText, aiEmotion)
+                
+                if (isFirstMessage && currentChat != "default") {
+                    viewModelScope.launch {
+                        try {
+                            val topicResult = repository.getAICompletion(
+                                apiKey = apiKey,
+                                modelName = model,
+                                userMessage = "Based on this message: '$text', generate a short 2-4 word topic title for this chat. Do not include quotes or any other text.",
+                                history = emptyList(),
+                                systemPrompt = "You are a title generator. Reply ONLY with the short title."
+                            )
+                            val title = topicResult.first.trim().take(40)
+                            if (title.isNotEmpty()) {
+                                repository.updateSessionTitle(currentChat, title)
+                            }
+                        } catch (e: Exception) { }
+                    }
+                }
 
             } catch (e: Throwable) {
                 Log.e("CallViewModel", "API call failed", e)

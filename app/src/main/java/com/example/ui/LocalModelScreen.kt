@@ -77,20 +77,49 @@ fun LocalModelScreen(
             }
 
             if (selectedModel == null) {
-                LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(searchResults) { model ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp)
-                                .clickable { 
-                                    selectedModel = model.id
-                                    viewModel.loadModelFiles(model.id)
+                if (searchResults.isEmpty() && !isLoading) {
+                    Text("Recommended for Mobile", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    val recommendedModels = listOf(
+                        "bartowski/Llama-3.2-1B-Instruct-GGUF",
+                        "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+                        "Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+                        "microsoft/Phi-3-mini-4k-instruct-gguf",
+                        "Qwen/Qwen1.5-0.5B-Chat-GGUF"
+                    )
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        items(recommendedModels) { modelId ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable { 
+                                        selectedModel = modelId
+                                        viewModel.loadModelFiles(modelId)
+                                    }
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(text = modelId, fontWeight = FontWeight.Bold)
+                                    Text(text = "Tap to view GGUF files", fontSize = 12.sp)
                                 }
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(text = model.id, fontWeight = FontWeight.Bold)
-                                Text(text = "Downloads: ${model.downloads}", fontSize = 12.sp)
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(modifier = Modifier.weight(1f)) {
+                        items(searchResults) { model ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp)
+                                    .clickable { 
+                                        selectedModel = model.id
+                                        viewModel.loadModelFiles(model.id)
+                                    }
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(text = model.id, fontWeight = FontWeight.Bold)
+                                    Text(text = "Downloads: ${model.downloads}", fontSize = 12.sp)
+                                }
                             }
                         }
                     }

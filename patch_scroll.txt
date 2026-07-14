@@ -1,0 +1,10 @@
+    val listState = rememberLazyListState()
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    LaunchedEffect(messages.size, isGenerating, isImeVisible) {
+        if (messages.isNotEmpty() || isGenerating) {
+            val lastIndex = if (isGenerating) messages.size else messages.size - 1
+            if (lastIndex >= 0) {
+                listState.animateScrollToItem(lastIndex, scrollOffset = 10000)
+            }
+        }
+    }

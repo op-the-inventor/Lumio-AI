@@ -43,6 +43,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
@@ -51,6 +52,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -235,12 +237,14 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     }
 
     // Floating scroll controller for transcript
-    val listState = rememberLazyListState(                                                )
-    LaunchedEffect(messages.size, isGenerating) {
+    val listState = rememberLazyListState()
+    val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+    LaunchedEffect(messages.size, isGenerating, isImeVisible) {
         if (messages.isNotEmpty() || isGenerating) {
             val lastIndex = if (isGenerating) messages.size else messages.size - 1
             if (lastIndex >= 0) {
-                listState.animateScrollToItem(lastIndex                                                )
+                // Scroll to the end of the item by adding a large positive offset or just normal scroll
+                listState.animateScrollToItem(lastIndex, scrollOffset = 10000)
             }
         }
     }
@@ -654,124 +658,24 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                     }
                                 }
 
-                                // Model Selector above input bar, aligned left
-                                var showModelDropdownInInput by remember { mutableStateOf(false) }
-                                var showCustomModelDialog by remember { mutableStateOf(false) }
-                                var customModelText by remember { mutableStateOf("") }
-                                Box(modifier = Modifier.padding(start = 12.dp, bottom = 2.dp)) {
-                                    Row(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp)                                                )
-                                            .clickable { showModelDropdownInInput = true }
-                                            .padding(horizontal = 6.dp, vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp                                                )
-                                    ) {
-                                        val currentModelName = when {
-                                            selectedModel == "meta-llama/llama-3.3-70b-instruct:free" -> "Llama 3.3"
-                                            selectedModel == "google/gemini-2.5-flash" -> "Gemini 2.5"
-                                            selectedModel == "mistralai/mistral-7b-instruct:free" -> "Mistral 7B"
-                                            selectedModel == "deepseek/deepseek-chat:free" -> "DeepSeek"
-                                            selectedModel.endsWith(".gguf") -> selectedModel.substringAfterLast("/")
-                                            else -> selectedModel.substringAfter("/").substringBefore(":")
-                                        }
-                                        Text(
-                                            text = currentModelName,
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                                                        )
-                                        Icon(
-                                            imageVector = Icons.Rounded.ArrowDropDown,
-                                            contentDescription = "Select Model",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(16.dp                                                )
-                                                                                        )
-                                    }
-
-                                    DropdownMenu(
-                                        expanded = showModelDropdownInInput,
-                                        onDismissRequest = { showModelDropdownInInput = false },
-                                        modifier = Modifier
-                                            .background(MaterialTheme.colorScheme.surface                                                )
-                                            .border(1.dp, if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFE5E5EA), RoundedCornerShape(8.dp)                                                )
-                                    ) {
-                                        val modelsList = listOf(
-                                            "meta-llama/llama-3.3-70b-instruct:free" to "Llama 3.3",
-                                            "google/gemini-2.5-flash" to "Gemini 2.5",
-                                            "mistralai/mistral-7b-instruct:free" to "Mistral 7B",
-                                            "deepseek/deepseek-chat:free" to "DeepSeek"
-                                                                                        )
-                                        modelsList.forEach { (modelId, displayName) ->
-                                            DropdownMenuItem(
-                                                text = { 
-                                                    Text(
-                                                        text = displayName, 
-                                                        fontWeight = FontWeight.Bold, 
-                                                        color = MaterialTheme.colorScheme.onSurface
-                                                    ) 
-                                                },
-                                                onClick = {
-                                                    viewModel.saveSelectedModel(modelId                                                )
-                                                    showModelDropdownInInput = false
-                                                    Toast.makeText(context, "Switched model to $displayName", Toast.LENGTH_SHORT).show(                                                )
-                                                }
-                                                                                            )
-                                        }
-                                        HorizontalDivider(                                                )
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text("Add Custom Model...", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary                                                )
-                                            },
-                                            onClick = {
-                                                showModelDropdownInInput = false
-                                                showCustomModelDialog = true
-                                            }
-                                                                                        )
-                                    }
-                                }
-
-                                if (showCustomModelDialog) {
-                                    androidx.compose.material3.AlertDialog(
-                                        onDismissRequest = { showCustomModelDialog = false },
-                                        title = { Text("Custom Model ID") },
-                                        text = {
-                                            TextField(
-                                                value = customModelText,
-                                                onValueChange = { customModelText = it },
-                                                placeholder = { Text("e.g. anthropic/claude-3-haiku") },
-                                                singleLine = true
-                                                                                            )
-                                        },
-                                        confirmButton = {
-                                            androidx.compose.material3.TextButton(
-                                                onClick = {
-                                                    if (customModelText.isNotBlank()) {
-                                                        viewModel.saveSelectedModel(customModelText.trim()                                                )
-                                                        Toast.makeText(context, "Switched to custom model", Toast.LENGTH_SHORT).show(                                                )
-                                                    }
-                                                    showCustomModelDialog = false
-                                                }
-                                            ) { Text("Save") }
-                                        },
-                                        dismissButton = {
-                                            androidx.compose.material3.TextButton(onClick = { showCustomModelDialog = false }) { Text("Cancel") }
-                                        }
-                                                                                    )
-                                }
-
                                 // --- INPUT ROW (ATTACH + TEXTFIELD + SEND) ---
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth(                                                )
-                                        .heightIn(min = 60.dp                                                )
-                                        .clip(RoundedCornerShape(32.dp)                                                )
-                                        .background(if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFEFEFF4)                                                )
+                                        .fillMaxWidth()
+                                        .heightIn(min = 60.dp)
+                                        .shadow(
+                                            elevation = 16.dp,
+                                            shape = RoundedCornerShape(32.dp),
+                                            spotColor = if (darkTheme) Color.White else Color.Black,
+                                            ambientColor = if (darkTheme) Color.White else Color.Black
+                                        )
+                                        .clip(RoundedCornerShape(32.dp))
+                                        .background(if (darkTheme) Color(0xFF2C2C2E) else Color(0xFFEFEFF4))
                                         .border(
                                             width = 1.dp,
                                             color = if (darkTheme) Color(0xFF3D3D40) else Color(0xFFE5E5EA),
-                                            shape = RoundedCornerShape(32.dp                                                )
-                                                                                        )
+                                            shape = RoundedCornerShape(32.dp)
+                                        )
                                         .padding(horizontal = 8.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
@@ -1085,33 +989,8 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
-                            Row(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(24.dp)                                                )
-                                    .background(MaterialTheme.colorScheme.secondaryContainer                                                )
-                                    .clickable {
-                                        isSidebarOpen = false
-                                        showLocalModels = true
-                                    }
-                                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp                                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.Download,
-                                    contentDescription = "Local Models",
-                                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    modifier = Modifier.size(16.dp                                                )
-                                                                                )
-                                Text(
-                                    text = "Local Models",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                                                )
-                            }
-                        }
 
+                        }
                         // Settings Icon instead of Avatar
                         IconButton(
                             onClick = {
@@ -1647,6 +1526,19 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                                     )
                                 }
                             }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = { showLocalModels = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary)
+                        ) {
+                            Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Download Local Models (GGUF)", fontWeight = FontWeight.Bold)
                         }
 
                         Spacer(modifier = Modifier.height(20.dp)                                                )
