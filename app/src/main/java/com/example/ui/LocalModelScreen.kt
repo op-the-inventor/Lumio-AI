@@ -118,10 +118,10 @@ fun LocalModelScreen(
             val glassBorder = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
 
             if (selectedModel == null) {
-                val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val dir = java.io.File(context.getExternalFilesDir(null), "models")
                 val downloadedFiles = dir.listFiles()?.filter { it.name.endsWith(".gguf") } ?: emptyList()
                 if (downloadedFiles.isNotEmpty()) {
-                    Text("Downloaded Models (Downloads folder)", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
+                    Text("Downloaded Models (Local folder)", fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 8.dp))
                     LazyColumn(modifier = Modifier.weight(if (searchResults.isEmpty()) 1f else 0.5f)) {
                         items(downloadedFiles) { file ->
                             Card(
@@ -221,7 +221,7 @@ fun LocalModelScreen(
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(onClick = {
-                                    val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                                    val dir = java.io.File(context.getExternalFilesDir(null), "models")
                                     val outputFile = java.io.File(dir, file.path.substringAfterLast("/"))
                                     if (!outputFile.exists()) {
                                         Toast.makeText(context, "Please download the model first", Toast.LENGTH_SHORT).show()

@@ -4,25 +4,27 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Share
+import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -32,9 +34,228 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+
+sealed class MarkdownBlock {
+    data class Text(val content: String) : MarkdownBlock()
+    data class Code(val language: String, val code: String) : MarkdownBlock()
+    data class Quote(val content: String) : MarkdownBlock()
+    data class Table(val headers: List<String>, val rows: List<List<String>>) : MarkdownBlock()
+    data class ListBlock(val items: List<String>, val isOrdered: Boolean) : MarkdownBlock()
+}
+
+fun parseMarkdownBlocks(text: String): List<MarkdownBlock> {
+    val blocks = mutableListOf<MarkdownBlock>()
+    val codeRegex = Regex("```(.*?)?\n(.*?)(```|$)", RegexOption.DOT_MATCHES_ALL)
+    var lastIndex = 0
+    
+    codeRegex.findAll(text).forEach { match ->
+        val before = text.substring(lastIndex, match.range.first)
+        if (before.isNotBlank()) {
+            blocks.addAll(parseNonCodeBlocks(before.trim()))
+        }
+        val lang = match.groupValues[1].trim()
+        val code = match.groupValues[2].trim()
+        blocks.add(MarkdownBlock.Code(lang, code))
+        lastIndex = match.range.last + 1
+    }
+    
+    val after = text.substring(lastIndex)
+    if (after.isNotBlank()) {
+        blocks.addAll(parseNonCodeBlocks(after.trim()))
+    }
+    
+    return blocks
+}
+
+fun parseNonCodeBlocks(text: String): List<MarkdownBlock> {
+    val blocks = mutableListOf<MarkdownBlock>()
+    var currentText = StringBuilder()
+    
+    val lines = text.split("\n")
+    var inQuote = false
+    var quoteContent = StringBuilder()
+    
+    var inList = false
+    var isOrderedList = false
+    var listItems = mutableListOf<String>()
+    
+    for (line in lines) {
+        if (line.startsWith("> ")) {
+            if (currentText.isNotEmpty()) {
+                blocks.add(MarkdownBlock.Text(currentText.toString().trimEnd()))
+                currentText.clear()
+            }
+            if (inList) {
+                blocks.add(MarkdownBlock.ListBlock(listItems.toList(), isOrderedList))
+                listItems.clear()
+                inList = false
+            }
+            inQuote = true
+            quoteContent.append(line.substring(2)).append("\n")
+        } else if (line.matches(Regex("^\\|.*\\|$"))) {
+            if (currentText.isNotEmpty()) {
+                blocks.add(MarkdownBlock.Text(currentText.toString().trimEnd()))
+                currentText.clear()
+            }
+            if (inQuote) {
+                blocks.add(MarkdownBlock.Quote(quoteContent.toString().trimEnd()))
+                quoteContent.clear()
+                inQuote = false
+            }
+            if (inList) {
+                blocks.add(MarkdownBlock.ListBlock(listItems.toList(), isOrderedList))
+                listItems.clear()
+                inList = false
+            }
+            // Parse table
+            val parts = line.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+            if (parts.all { it.matches(Regex("^-+$")) }) {
+                // divider row, skip
+            } else {
+                if (blocks.isNotEmpty() && blocks.last() is MarkdownBlock.Table) {
+                    val lastTable = blocks.removeLast() as MarkdownBlock.Table
+                    val newRows = lastTable.rows.toMutableList()
+                    newRows.add(parts)
+                    blocks.add(MarkdownBlock.Table(lastTable.headers, newRows))
+                } else {
+                    blocks.add(MarkdownBlock.Table(parts, emptyList()))
+                }
+            }
+        } else if (line.matches(Regex("^[-*]\\s+.*"))) {
+            if (currentText.isNotEmpty()) {
+                blocks.add(MarkdownBlock.Text(currentText.toString().trimEnd()))
+                currentText.clear()
+            }
+            if (inQuote) {
+                blocks.add(MarkdownBlock.Quote(quoteContent.toString().trimEnd()))
+                quoteContent.clear()
+                inQuote = false
+            }
+            if (inList && isOrderedList) {
+                blocks.add(MarkdownBlock.ListBlock(listItems.toList(), isOrderedList))
+                listItems.clear()
+            }
+            inList = true
+            isOrderedList = false
+            listItems.add(line.replaceFirst(Regex("^[-*]\\s+"), ""))
+        } else if (line.matches(Regex("^\\d+\\.\\s+.*"))) {
+            if (currentText.isNotEmpty()) {
+                blocks.add(MarkdownBlock.Text(currentText.toString().trimEnd()))
+                currentText.clear()
+            }
+            if (inQuote) {
+                blocks.add(MarkdownBlock.Quote(quoteContent.toString().trimEnd()))
+                quoteContent.clear()
+                inQuote = false
+            }
+            if (inList && !isOrderedList) {
+                blocks.add(MarkdownBlock.ListBlock(listItems.toList(), isOrderedList))
+                listItems.clear()
+            }
+            inList = true
+            isOrderedList = true
+            listItems.add(line.replaceFirst(Regex("^\\d+\\.\\s+"), ""))
+        } else {
+            if (inQuote) {
+                blocks.add(MarkdownBlock.Quote(quoteContent.toString().trimEnd()))
+                quoteContent.clear()
+                inQuote = false
+            }
+            if (inList) {
+                blocks.add(MarkdownBlock.ListBlock(listItems.toList(), isOrderedList))
+                listItems.clear()
+                inList = false
+            }
+            currentText.append(line).append("\n")
+        }
+    }
+    
+    if (quoteContent.isNotEmpty()) blocks.add(MarkdownBlock.Quote(quoteContent.toString().trimEnd()))
+    if (listItems.isNotEmpty()) blocks.add(MarkdownBlock.ListBlock(listItems.toList(), isOrderedList))
+    if (currentText.isNotEmpty()) blocks.add(MarkdownBlock.Text(currentText.toString().trimEnd()))
+    
+    return blocks
+}
+
+fun formatMarkdownInline(text: String): AnnotatedString {
+    return buildAnnotatedString {
+        var i = 0
+        while (i < text.length) {
+            when {
+                text.startsWith("**", i) -> {
+                    val end = text.indexOf("**", i + 2)
+                    if (end != -1) {
+                        withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append(formatMarkdownInline(text.substring(i + 2, end)))
+                        }
+                        i = end + 2
+                    } else {
+                        append(text[i])
+                        i++
+                    }
+                }
+                text.startsWith("*", i) -> {
+                    val end = text.indexOf("*", i + 1)
+                    if (end != -1) {
+                        withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
+                            append(formatMarkdownInline(text.substring(i + 1, end)))
+                        }
+                        i = end + 1
+                    } else {
+                        append(text[i])
+                        i++
+                    }
+                }
+                text.startsWith("`", i) -> {
+                    val end = text.indexOf("`", i + 1)
+                    if (end != -1) {
+                        withStyle(SpanStyle(fontFamily = FontFamily.Monospace, background = Color(0x33888888), fontSize = 14.sp)) {
+                            append(text.substring(i + 1, end))
+                        }
+                        i = end + 1
+                    } else {
+                        append(text[i])
+                        i++
+                    }
+                }
+                text.startsWith("### ", i) -> {
+                    val end = text.indexOf("\n", i).let { if (it == -1) text.length else it }
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 20.sp)) {
+                        append(formatMarkdownInline(text.substring(i + 4, end)))
+                    }
+                    i = end
+                }
+                text.startsWith("## ", i) -> {
+                    val end = text.indexOf("\n", i).let { if (it == -1) text.length else it }
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 22.sp)) {
+                        append(formatMarkdownInline(text.substring(i + 3, end)))
+                    }
+                    i = end
+                }
+                text.startsWith("# ", i) -> {
+                    val end = text.indexOf("\n", i).let { if (it == -1) text.length else it }
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 24.sp)) {
+                        append(formatMarkdownInline(text.substring(i + 2, end)))
+                    }
+                    i = end
+                }
+                text.startsWith("---", i) -> {
+                    val end = text.indexOf("\n", i).let { if (it == -1) text.length else it }
+                    append("\n──────────\n")
+                    i = end
+                }
+                else -> {
+                    append(text[i])
+                    i++
+                }
+            }
+        }
+    }
+}
 
 @Composable
 fun MessageContent(text: String, isUser: Boolean) {
@@ -51,57 +272,60 @@ fun MessageContent(text: String, isUser: Boolean) {
                         lineHeight = 22.sp
                     )
                 }
+                is MarkdownBlock.Quote -> {
+                    val quoteColor = MaterialTheme.colorScheme.primary
+                    Row(modifier = Modifier.padding(vertical = 4.dp)) {
+                        Box(modifier = Modifier.width(4.dp).height(IntrinsicSize.Min).background(quoteColor, RoundedCornerShape(2.dp)))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = formatMarkdownInline(block.content),
+                            fontStyle = FontStyle.Italic,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                is MarkdownBlock.ListBlock -> {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        block.items.forEachIndexed { index, item ->
+                            Row {
+                                Text(
+                                    text = if (block.isOrdered) "${index + 1}. " else "• ",
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.width(24.dp)
+                                )
+                                Text(text = formatMarkdownInline(item))
+                            }
+                        }
+                    }
+                }
+                is MarkdownBlock.Table -> {
+                    androidx.compose.foundation.layout.Column(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(vertical = 8.dp)) {
+                        androidx.compose.foundation.layout.Row(modifier = Modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
+                            block.headers.forEach { header ->
+                                Text(
+                                    text = formatMarkdownInline(header),
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(8.dp).widthIn(min = 60.dp)
+                                )
+                            }
+                        }
+                        block.rows.forEachIndexed { idx, row ->
+                            androidx.compose.foundation.layout.Row(modifier = Modifier.background(if (idx % 2 == 0) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))) {
+                                row.forEach { cell ->
+                                    Text(
+                                        text = formatMarkdownInline(cell),
+                                        modifier = Modifier.padding(8.dp).widthIn(min = 60.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 is MarkdownBlock.Code -> {
                     CodeCard(language = block.language, code = block.code)
                 }
             }
         }
-    }
-}
-
-sealed class MarkdownBlock {
-    data class Text(val content: String) : MarkdownBlock()
-    data class Code(val language: String, val code: String) : MarkdownBlock()
-}
-
-fun parseMarkdownBlocks(text: String): List<MarkdownBlock> {
-    val blocks = mutableListOf<MarkdownBlock>()
-    val regex = Regex("```(.*?)?\n(.*?)(```|$)", RegexOption.DOT_MATCHES_ALL)
-    var lastIndex = 0
-    
-    regex.findAll(text).forEach { match ->
-        val before = text.substring(lastIndex, match.range.first)
-        if (before.isNotBlank()) {
-            blocks.add(MarkdownBlock.Text(before.trim()))
-        }
-        val lang = match.groupValues[1].trim()
-        val code = match.groupValues[2].trim()
-        blocks.add(MarkdownBlock.Code(lang, code))
-        lastIndex = match.range.last + 1
-    }
-    
-    val after = text.substring(lastIndex)
-    if (after.isNotBlank()) {
-        blocks.add(MarkdownBlock.Text(after.trim()))
-    }
-    
-    return blocks
-}
-
-fun formatMarkdownInline(text: String): AnnotatedString {
-    return buildAnnotatedString {
-        var currentIndex = 0
-        // Simple regex for bold, italic, inline code
-        val boldRegex = Regex("\\*\\*(.*?)\\*\\*")
-        val italicRegex = Regex("\\*(.*?)\\*")
-        val inlineCodeRegex = Regex("`(.*?)`")
-        
-        // This is a naive implementation; a real one would use a proper lexer
-        // We'll just append text for now, but we can do simple substitutions
-        
-        // Actually, let's just do a basic formatting
-        // (Replacing with simple styled spans is complex with overlapping regex)
-        append(text)
     }
 }
 
@@ -241,7 +465,5 @@ fun CodeCard(language: String, code: String) {
             }
         }
     }
-
     }
 }
-

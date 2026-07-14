@@ -96,7 +96,7 @@ class LocalModelViewModel : ViewModel() {
                 }
                 
                 val fileLength = body.contentLength()
-                val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val dir = java.io.File(context.getExternalFilesDir(null), "models")
                 if (!dir.exists()) dir.mkdirs()
                 
                 val outputFile = File(dir, file.path.substringAfterLast("/"))
@@ -162,7 +162,7 @@ class LocalModelViewModel : ViewModel() {
             _downloadProgress.value = 0f
             _downloadStatus.value = "Importing file..."
             try {
-                val dir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+                val dir = java.io.File(context.getExternalFilesDir(null), "models")
                 if (!dir.exists()) dir.mkdirs()
                 
                 var fileName = "imported_model.gguf"

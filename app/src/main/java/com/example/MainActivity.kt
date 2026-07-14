@@ -1,5 +1,7 @@
 package com.example
 
+import androidx.compose.ui.focus.focusRequester
+
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -69,6 +71,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.example.ui.ApiKeyTestState
 import com.example.ui.CallState
 import com.example.ui.CallViewModel
@@ -80,10 +83,6 @@ import com.example.data.database.CallMessageEntity
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val controller = androidx.core.view.WindowInsetsControllerCompat(window, window.decorView)
-        controller.systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.hide(androidx.core.view.WindowInsetsCompat.Type.systemBars())
         
         var initError: String? = null
         try { com.example.data.api.supabase.handleDeeplinks(intent) } catch (e: Throwable) { initError = e.stackTraceToString() }
@@ -186,6 +185,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     val streamingEmotion by viewModel.streamingEmotion.collectAsState()
     val sessions by viewModel.sessions.collectAsState(                                                )
     val isGenerating by viewModel.isGenerating.collectAsState(                                                )
+    val isLocalModelLoading by viewModel.isLocalModelLoading.collectAsState()
 
     val selectedLanguage by viewModel.selectedLanguage.collectAsState(                                                )
     val selectedEmotionalPresetId by viewModel.selectedEmotionalPresetId.collectAsState(                                                )
@@ -212,7 +212,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     LaunchedEffect(Unit) {
         if (isFirstLaunch) {
             kotlinx.coroutines.delay(300)
-            try { focusRequester.requestFocus() } catch(e: Exception) {}
+            try { focusRequester.requestFocus(); keyboardController?.show() } catch(e: Exception) {}
             isFirstLaunch = false
         }
     }
@@ -272,7 +272,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
     // Floating scroll controller for transcript
     val listState = rememberLazyListState()
     val isImeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-    LaunchedEffect(messages.size, isGenerating, isImeVisible) {
+    LaunchedEffect(messages.size, isGenerating, isImeVisible, streamingMessage) {
         if (messages.isNotEmpty() || isGenerating) {
             val lastIndex = if (isGenerating) messages.size else messages.size - 1
             if (lastIndex >= 0) {
@@ -606,7 +606,11 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                 }
                                                             }
                                                             Spacer(modifier = Modifier.height(4.dp))
-                                                            if (streamingMessage!!.isEmpty()) {
+                                                            if (isLocalModelLoading) {
+                                                                Text("Loading local model into memory...", fontSize = 12.sp, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary)
+                                                                Spacer(modifier = Modifier.height(4.dp))
+                                                                LinearProgressIndicator(modifier = Modifier.width(100.dp))
+                                                            } else if (streamingMessage!!.isEmpty()) {
                                                                 ThinkingIndicatorItem()
                                                             } else {
                                                                 com.example.ui.MessageContent(text = streamingMessage!!, isUser = false)
@@ -617,7 +621,21 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                             }
                                         } else if (isGenerating) {
                                             item {
-                                                ThinkingIndicatorItem()
+                                                if (isLocalModelLoading) {
+                                                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Start) {
+                                                        Box(modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color.Transparent).padding(4.dp)) {
+                                                            Column {
+                                                                Text("Lumio", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                                                Spacer(modifier = Modifier.height(4.dp))
+                                                                Text("Loading local model into memory...", fontSize = 12.sp, fontStyle = FontStyle.Italic, color = MaterialTheme.colorScheme.primary)
+                                                                Spacer(modifier = Modifier.height(4.dp))
+                                                                LinearProgressIndicator(modifier = Modifier.width(100.dp))
+                                                            }
+                                                        }
+                                                    }
+                                                } else {
+                                                    ThinkingIndicatorItem()
+                                                }
                                             }
                                         }
 
@@ -751,7 +769,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                         ),
                                         modifier = Modifier
                                             .weight(1f                                                )
-                                            .testTag("text_input"),
+                                            .focusRequester(focusRequester).testTag("text_input"),
                                         keyboardOptions = KeyboardOptions(
                                             imeAction = ImeAction.Send
                                         ),
@@ -1337,22 +1355,48 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                             color = MaterialTheme.colorScheme.onBackground,
                             modifier = Modifier.padding(bottom = 6.dp)
                         )
-                        OutlinedTextField(
-                            value = hfApiKey,
-                            onValueChange = { viewModel.saveHfApiKey(it) },
-                            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                            placeholder = { Text("hf_...", fontSize = 13.sp) },
-                            visualTransformation = if (isApiKeyVisible) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                            trailingIcon = {
-                                IconButton(onClick = { isApiKeyVisible = !isApiKeyVisible }) {
-                                    Icon(
-                                        imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = null
-                                    )
-                                }
-                            }
-                        )
 
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
+                                .padding(horizontal = 12.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.VpnKey, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                            TextField(
+                                value = hfApiKey,
+                                onValueChange = { viewModel.saveHfApiKey(it) },
+                                placeholder = { Text("hf_...", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp) },
+                                visualTransformation = if (isApiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("hf_api_key_input")
+                            )
+
+                            IconButton(
+                                onClick = { isApiKeyVisible = !isApiKeyVisible },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                    contentDescription = "Toggle key visibility",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
                         // OpenRouter Key Row       // OpenRouter Key Row
                         Text(
                             text = "OpenRouter API Key",
@@ -1400,7 +1444,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                 Icon(
                                     imageVector = if (isApiKeyVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                     contentDescription = "Toggle key visibility",
-                                    tint = TextMuted
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                                                                 )
                             }
                         }
@@ -1520,6 +1564,89 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                                                                             )
                         }
 
+                        // Test Model
+                        var testModelInput by remember { mutableStateOf("hello") }
+                        var testModelResult by remember { mutableStateOf<String?>(null) }
+                        var isTestingModel by remember { mutableStateOf(false) }
+                        val coroutineScope = rememberCoroutineScope()
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "Test Selected Model",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(bottom = 6.dp)
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = testModelInput,
+                                onValueChange = { testModelInput = it },
+                                modifier = Modifier.weight(1f).height(50.dp),
+                                textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = MaterialTheme.colorScheme.outline,
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = {
+                                    isTestingModel = true
+                                    testModelResult = null
+                                    coroutineScope.launch {
+                                        try {
+                                            val isLocal = selectedModel.endsWith(".gguf")
+                                            if (isLocal) {
+                                                var localRes = ""
+                                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                                    val params = de.kherud.llama.ModelParameters().setModel(selectedModel)
+                                                    de.kherud.llama.LlamaModel(params).use { llamaModel ->
+                                                        val prompt = "<|im_start|>user\n$testModelInput<|im_end|>\n<|im_start|>assistant\n"
+                                                        val inferParams = de.kherud.llama.InferenceParameters(prompt)
+                                                        for (out in llamaModel.generate(inferParams)) {
+                                                            localRes += out.text
+                                                        }
+                                                    }
+                                                }
+                                                testModelResult = localRes.trim()
+                                            } else {
+                                                var res = ""
+                                                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                                                    val db = com.example.data.database.AppDatabase.getDatabase(context)
+                                                    val repo = com.example.data.repository.AppRepository(db.settingDao(), db.callMessageDao(), db.chatSessionDao(), com.example.data.api.OpenRouterService.create())
+                                                    res = repo.getAICompletion(apiKey, selectedModel, testModelInput, emptyList(), "You are a test assistant.").first
+                                                }
+                                                testModelResult = res
+                                            }
+                                        } catch (e: Exception) {
+                                            testModelResult = "Error: ${e.message}"
+                                        } finally {
+                                            isTestingModel = false
+                                        }
+                                    }
+                                },
+                                enabled = !isTestingModel,
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
+                                modifier = Modifier.height(50.dp)
+                            ) {
+                                if (isTestingModel) {
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), color = MaterialTheme.colorScheme.onPrimary, strokeWidth = 2.dp)
+                                } else {
+                                    Text("Test", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                        if (testModelResult != null) {
+                            Text(
+                                text = testModelResult!!,
+                                fontSize = 12.sp,
+                                color = if (testModelResult!!.startsWith("Error")) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 4.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(4.dp)).padding(8.dp).fillMaxWidth()
+                            )
+                        }
+
                         Text(
                             text = "Tap a preset below to auto-fill its Model ID:",
                             fontSize = 11.sp,
@@ -1605,7 +1732,7 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
                         ) {
                             Icon(Icons.Rounded.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Download Offline Voices (Piper)", fontWeight = FontWeight.Bold)
+                            Text("Download Voice Models", fontWeight = FontWeight.Bold)
                         }
 
                         Spacer(modifier = Modifier.height(20.dp)                                                )

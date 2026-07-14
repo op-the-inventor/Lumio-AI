@@ -120,6 +120,9 @@ class CallViewModel(application: Application) : AndroidViewModel(application), T
     private val _isGenerating = MutableStateFlow(false)
     val isGenerating: StateFlow<Boolean> = _isGenerating.asStateFlow()
 
+    private val _isLocalModelLoading = MutableStateFlow(false)
+    val isLocalModelLoading: StateFlow<Boolean> = _isLocalModelLoading.asStateFlow()
+
     // Call History sessions flow
     private val _sessions = MutableStateFlow<List<ChatSessionEntity>>(emptyList())
     val sessions: StateFlow<List<ChatSessionEntity>> = _sessions.asStateFlow()
@@ -1179,13 +1182,22 @@ Do not forget the tone tag!
                     fullPrompt.append("<|im_start|>assistant\n")
                     val responseText = StringBuilder()
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        val params = de.kherud.llama.ModelParameters().setModel(model)
-                        de.kherud.llama.LlamaModel(params).use { llamaModel ->
-                            val inferParams = de.kherud.llama.InferenceParameters(fullPrompt.toString())
-                            for (out in llamaModel.generate(inferParams)) {
-                                responseText.append(out.text)
-                                _streamingMessage.value = responseText.toString()
+                        try {
+                            _isLocalModelLoading.value = true
+                            val params = de.kherud.llama.ModelParameters().setModel(model)
+                            de.kherud.llama.LlamaModel(params).use { llamaModel ->
+                                _isLocalModelLoading.value = false
+                                val inferParams = de.kherud.llama.InferenceParameters(fullPrompt.toString())
+                                for (out in llamaModel.generate(inferParams)) {
+                                    responseText.append(out.text)
+                                    _streamingMessage.value = responseText.toString()
+                                }
                             }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            throw e
+                        } finally {
+                            _isLocalModelLoading.value = false
                         }
                     }
                     val rawText = responseText.toString().trim()
@@ -1233,15 +1245,21 @@ Do not forget the tone tag!
                             var title = ""
                             if (isLocalModel) {
                                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                                    val params = de.kherud.llama.ModelParameters().setModel(model)
-                                    de.kherud.llama.LlamaModel(params).use { llamaModel ->
-                                        val prompt = "<|im_start|>system\nYou are a title generator. Reply ONLY with the short title.<|im_end|>\n<|im_start|>user\nBased on this message: '$text', generate a short 2-4 word topic title for this chat. Do not include quotes or any other text.<|im_end|>\n<|im_start|>assistant\n"
-                                        val inferParams = de.kherud.llama.InferenceParameters(prompt)
-                                        val responseText = java.lang.StringBuilder()
-                                        for (out in llamaModel.generate(inferParams)) {
-                                             responseText.append(out.text)
+                                    try {
+                                        _isLocalModelLoading.value = true
+                                        val params = de.kherud.llama.ModelParameters().setModel(model)
+                                        de.kherud.llama.LlamaModel(params).use { llamaModel ->
+                                            _isLocalModelLoading.value = false
+                                            val prompt = "<|im_start|>system\nYou are a title generator. Reply ONLY with the short title.<|im_end|>\n<|im_start|>user\nBased on this message: '$text', generate a short 2-4 word topic title for this chat. Do not include quotes or any other text.<|im_end|>\n<|im_start|>assistant\n"
+                                            val inferParams = de.kherud.llama.InferenceParameters(prompt)
+                                            val responseText = java.lang.StringBuilder()
+                                            for (out in llamaModel.generate(inferParams)) {
+                                                 responseText.append(out.text)
+                                            }
+                                            title = responseText.toString().trim().take(40)
                                         }
-                                        title = responseText.toString().trim().take(40)
+                                    } finally {
+                                        _isLocalModelLoading.value = false
                                     }
                                 }
                             } else {
