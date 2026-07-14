@@ -1031,12 +1031,10 @@ fun CallScreen(viewModel: CallViewModel = viewModel()) {
             ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(                                                )
-                    .fillMaxHeight(0.85f                                                )
-                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)                                                )
-                    .background(MaterialTheme.colorScheme.surface                                                )
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
                     .clickable(enabled = false) {} // block click throughs
-                    .padding(24.dp                                                )
+                    .padding(24.dp)
             ) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
